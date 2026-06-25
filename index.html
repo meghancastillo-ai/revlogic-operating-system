@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RevLogic OS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0d0c;--bg2:#141614;--bg3:#1c1f1c;--bg4:#242724;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8ebe8;--text2:#9ba89b;--text3:#5a665a;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.1);--green-mid:rgba(74,222,128,0.25);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.1);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.1);
+  --red:#f87171;--red-dim:rgba(248,113,113,0.1);
+  --serif:'Syne',sans-serif;--sans:'DM Sans',sans-serif;
+  --r:8px;--r2:12px;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;font-size:15px}
+
+/* ── Header ── */
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;background:var(--bg)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:17px;height:17px}
+.logo-name{font-family:var(--serif);font-size:17px;font-weight:600;letter-spacing:-.3px}
+.logo-sub{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
+.header-actions{display:flex;align-items:center;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:4px;gap:3px}
+.mode-btn{padding:9px 22px;border-radius:7px;font-size:14px;font-weight:500;font-family:var(--sans);cursor:pointer;transition:all .2s;border:none;background:none;color:var(--text3);letter-spacing:.1px;white-space:nowrap}
+.mode-btn.active{background:var(--green);color:#0c0d0c;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.mode-btn:hover:not(.active){background:var(--bg4);color:var(--text)}
+
+/* ── Layout ── */
+.app{display:flex;flex:1;min-height:0;height:calc(100vh - 57px)}
+
+/* ── Sidebar ── */
+.sidebar{width:200px;flex-shrink:0;border-right:1px solid var(--border);padding:20px 0;overflow-y:auto;background:var(--bg)}
+.sb-section{margin-bottom:24px;padding:0 12px}
+.sb-label{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:6px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--r);color:var(--text2);cursor:pointer;transition:all .15s;border:1px solid transparent;font-size:13px;margin-bottom:2px}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:var(--green-dim);border-color:var(--green-mid);color:var(--green)}
+.sb-item .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sb-item .ct{margin-left:auto;font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums}
+.sb-item.active .ct{color:var(--green);opacity:.6}
+
+/* ── Main content ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+
+/* ── Browse mode ── */
+#browse-mode{padding:28px 32px;flex:1;display:none}
+.browse-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:gap}
+.browse-title{font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.5px}
+.browse-sub{font-size:14px;color:var(--text2);margin-top:3px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;width:260px;transition:border-color .2s}
+.search-wrap:focus-within{border-color:var(--green-mid)}
+.search-wrap input{background:none;border:none;outline:none;font-family:var(--sans);font-size:14px;color:var(--text);width:100%}
+.search-wrap input::placeholder{color:var(--text3)}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap}
+.filter-pill{padding:6px 14px;border-radius:20px;font-size:12px;border:1px solid var(--border);color:var(--text2);background:none;cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.filter-pill:hover{border-color:var(--border2);color:var(--text)}
+.filter-pill.on{background:var(--green-dim);border-color:var(--green-mid);color:var(--green)}
+.filter-pill.amber.on{background:var(--amber-dim);border-color:rgba(245,158,11,.3);color:var(--amber)}
+.filter-pill.blue.on{background:var(--blue-dim);border-color:rgba(96,165,250,.3);color:var(--blue)}
+
+/* ── Asset cards ── */
+.assets-grid{display:flex;flex-direction:column;gap:6px}
+.asset-row{display:flex;align-items:flex-start;gap:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;transition:all .15s;cursor:default}
+.asset-row:hover{border-color:var(--border2);background:var(--bg3)}
+.asset-row.has-link{cursor:pointer}
+.asset-row.has-link:hover{border-color:var(--green-mid)}
+.asset-status{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.status-exists{background:var(--green)}
+.status-needs{background:var(--amber)}
+.status-wish{background:var(--text3)}
+.asset-main{flex:1;min-width:0}
+.asset-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px;line-height:1.3}
+.asset-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:6px}
+.asset-how{font-size:12px;color:var(--text3);line-height:1.4;padding:6px 8px;background:var(--bg3);border-radius:5px;border-left:2px solid var(--green-mid);margin-bottom:6px}
+.asset-tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;letter-spacing:.2px}
+.tag-program{background:var(--bg4);color:var(--text2);border:1px solid var(--border)}
+.tag-type{background:var(--blue-dim);color:var(--blue)}
+.tag-template{background:var(--green-dim);color:var(--green)}
+.tag-warn{background:var(--red-dim);color:var(--red)}
+.asset-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.open-link{display:flex;align-items:center;gap:5px;padding:7px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text2);text-decoration:none;transition:all .15s;white-space:nowrap}
+.open-link:hover{border-color:var(--green-mid);color:var(--green)}
+.copy-link{display:flex;align-items:center;gap:5px;padding:7px 13px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap}
+.copy-link:hover{border-color:var(--border2);color:var(--text2)}
+.no-link{font-size:10px;color:var(--text3);padding-top:4px}
+.results-count{font-size:13px;color:var(--text3);margin-bottom:12px}
+
+/* ── AI Guide mode ── */
+#guide-mode{display:flex;flex:1;flex-direction:column}
+.guide-top{padding:32px 32px 0;border-bottom:1px solid var(--border)}
+.guide-title{font-family:var(--serif);font-size:26px;font-weight:600;margin-bottom:6px}
+.guide-sub{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.prompt-area{display:flex;gap:10px;align-items:flex-end;padding-bottom:20px}
+.prompt-wrap{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;transition:border-color .2s}
+.prompt-wrap:focus-within{border-color:var(--green-mid)}
+.prompt-wrap textarea{width:100%;background:none;border:none;outline:none;font-family:var(--sans);font-size:14px;color:var(--text);resize:none;min-height:52px;line-height:1.6}
+.prompt-wrap textarea::placeholder{color:var(--text3)}
+.ask-btn{padding:13px 22px;background:var(--green);color:#0c0d0c;border:none;border-radius:var(--r2);font-family:var(--serif);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.ask-btn:hover{opacity:.85;transform:translateY(-1px)}
+.ask-btn:disabled{background:var(--bg4);color:var(--text3);cursor:not-allowed;transform:none}
+.ask-btn .spin{width:13px;height:13px;border:2px solid rgba(0,0,0,.2);border-top-color:#0c0d0c;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.ask-btn.loading .spin{display:block}
+.ask-btn.loading .btn-label{opacity:.7}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.guide-examples{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 16px}
+.example-chip{padding:8px 14px;border-radius:20px;font-size:13px;border:1px solid var(--green-mid);color:var(--text2);cursor:pointer;transition:all .15s;background:rgba(74,222,128,0.04)}
+.example-chip:hover{border-color:var(--green-mid);color:var(--green);background:var(--green-dim)}
+
+.guide-results{flex:1;overflow-y:auto;padding:28px 32px}
+.guide-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;text-align:center;gap:10px}
+.guide-empty-icon{width:48px;height:48px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.guide-empty h3{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--text)}
+.guide-empty p{font-size:13px;color:var(--text3);max-width:280px;line-height:1.6}
+
+.ai-response{max-width:760px}
+.ai-thinking{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:13px;margin-bottom:16px}
+.ai-thinking .dot1,.ai-thinking .dot2,.ai-thinking .dot3{width:5px;height:5px;border-radius:50%;background:var(--green);animation:bounce .8s ease-in-out infinite}
+.ai-thinking .dot2{animation-delay:.15s}
+.ai-thinking .dot3{animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:scale(0.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+.ai-answer{font-size:15px;color:var(--text);line-height:1.7;margin-bottom:24px;white-space:pre-wrap}
+.rec-section-title{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.rec-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.rec-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.rec-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:border-color .15s}
+.rec-card:hover{border-color:var(--green-mid)}
+.rec-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.rec-card-title{font-size:14px;font-weight:500;color:var(--text);line-height:1.3}
+.rec-why{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:8px}
+.rec-how{font-size:12px;color:var(--text3);padding:5px 8px;background:var(--bg3);border-radius:5px;border-left:2px solid var(--green-mid);margin-bottom:8px;line-height:1.4}
+.rec-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+
+/* status legend */
+.legend{display:flex;gap:12px;font-size:12px;color:var(--text3);align-items:center;margin-bottom:16px}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend .dot{width:6px;height:6px;border-radius:50%}
+
+@media(max-width:700px){
+  .sidebar{display:none}
+  #browse-mode,#guide-mode .guide-top,#guide-mode .guide-results{padding:16px}
+  .browse-title{font-size:18px}
+  .search-wrap{width:100%}
+  header{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8L7 12L13 4" stroke="#0c0d0c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><div class="logo-name">RevLogic OS</div><div class="logo-sub">Enablement Hub</div></div>
+  </div>
+  <div class="header-actions">
+    <button class="mode-btn active" id="btn-guide" onclick="setMode('guide')">AI guide</button>
+    <button class="mode-btn" id="btn-browse" onclick="setMode('browse')">Browse library</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">Playbooks</div>
+      <div class="sb-item active" onclick="setPlaybook('all',this)"><span class="dot" style="background:var(--green)"></span>All content<span class="ct" id="ct-all"></span></div>
+      <div class="sb-item" onclick="setPlaybook('sell',this)"><span class="dot" style="background:#a78bfa"></span>How we sell<span class="ct" id="ct-sell"></span></div>
+      <div class="sb-item" onclick="setPlaybook('build',this)"><span class="dot" style="background:#60a5fa"></span>What we build<span class="ct" id="ct-build"></span></div>
+      <div class="sb-item" onclick="setPlaybook('deliver',this)"><span class="dot" style="background:#f59e0b"></span>How we deliver<span class="ct" id="ct-deliver"></span></div>
+      <div class="sb-item" onclick="setPlaybook('show',this)"><span class="dot" style="background:#f472b6"></span>How we show up<span class="ct" id="ct-show"></span></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Programs</div>
+      <div class="sb-item" onclick="setProgram('dealREV',this)">dealREV<span class="ct" id="ct-dealREV"></span></div>
+      <div class="sb-item" onclick="setProgram('rampREV',this)">rampREV<span class="ct" id="ct-rampREV"></span></div>
+      <div class="sb-item" onclick="setProgram('valueREV',this)">valueREV<span class="ct" id="ct-valueREV"></span></div>
+      <div class="sb-item" onclick="setProgram('leaderREV',this)">leaderREV<span class="ct" id="ct-leaderREV"></span></div>
+      <div class="sb-item" onclick="setProgram('pipelineREV',this)">pipelineREV<span class="ct" id="ct-pipelineREV"></span></div>
+      <div class="sb-item" onclick="setProgram('partnerREV',this)">partnerREV<span class="ct" id="ct-partnerREV"></span></div>
+      <div class="sb-item" onclick="setProgram('growthREV',this)">growthREV<span class="ct" id="ct-growthREV"></span></div>
+      <div class="sb-item" onclick="setProgram('roiREV',this)">roiREV<span class="ct" id="ct-roiREV"></span></div>
+      <div class="sb-item" onclick="setProgram('REVstudios',this)">REVstudios<span class="ct" id="ct-REVstudios"></span></div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Browse Mode -->
+    <div id="browse-mode">
+      <div class="browse-header">
+        <div>
+          <div class="browse-title" id="browse-title">All content</div>
+          <div class="browse-sub" id="browse-sub">Your full RevLogic asset library</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#5a665a" stroke-width="1.5"/><path d="M11 11L14 14" stroke="#5a665a" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input type="text" id="search-input" placeholder="Search assets…" oninput="applyFilters()">
+        </div>
+        <div class="filter-row">
+          <button class="filter-pill on" id="f-exists" onclick="toggleFilter('exists',this)">Exists</button>
+          <button class="filter-pill amber on" id="f-needs" onclick="toggleFilter('needs',this)">Needs work</button>
+          <button class="filter-pill" id="f-wish" onclick="toggleFilter('wish',this)">Wish list</button>
+          <button class="filter-pill blue" id="f-template" onclick="toggleFilter('template',this)">Templates only</button>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><span class="dot" style="background:var(--green)"></span>Exists</span>
+        <span><span class="dot" style="background:var(--amber)"></span>Needs work</span>
+        <span><span class="dot" style="background:var(--text3)"></span>Wish list</span>
+      </div>
+
+      <div class="results-count" id="results-count"></div>
+      <div class="assets-grid" id="assets-grid"></div>
+    </div>
+
+    <!-- AI Guide Mode -->
+    <div id="guide-mode">
+      <div class="guide-top">
+        <div class="guide-title">What do you need?</div>
+        <div class="guide-sub">Describe your situation — what you're working on, who you're meeting, what you need to build. The AI will surface the right assets and tell you exactly how to use them.</div>
+        <div class="prompt-area">
+          <div class="prompt-wrap">
+            <textarea id="guide-input" placeholder="e.g. I'm building a rampREV for a 200-person SaaS company, need onboarding examples to show in the kickoff deck…&#10;Or: I have a first meeting with a logistics VP tomorrow, what should I bring?&#10;Or: What templates can I use to kick off a pipelineREV?" rows="3"></textarea>
+          </div>
+          <button class="ask-btn" id="ask-btn" onclick="askGuide()">
+            <div class="spin"></div>
+            <span class="btn-label">Find assets</span>
+          </button>
+        </div>
+        <div class="guide-examples">
+          <span class="example-chip" onclick="fillExample(this)">First meeting with a new prospect</span>
+          <span class="example-chip" onclick="fillExample(this)">Starting a rampREV engagement</span>
+          <span class="example-chip" onclick="fillExample(this)">Building a pipelineREV program</span>
+          <span class="example-chip" onclick="fillExample(this)">Show proof of what we build</span>
+          <span class="example-chip" onclick="fillExample(this)">Templates I can duplicate right now</span>
+          <span class="example-chip" onclick="fillExample(this)">Partner enablement materials</span>
+        </div>
+      </div>
+      <div class="guide-results" id="guide-results">
+        <div class="guide-empty">
+          <div class="guide-empty-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="#5a665a" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+          <h3>Describe your situation</h3>
+          <p>Tell the AI what you're working on and it'll find the best assets from all four playbooks with guidance on how to use them.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA — All 4 playbooks embedded
+// ─────────────────────────────────────────────
+const ASSETS = [
+  // ── HOW WE SELL ──
+  {id:'s1',playbook:'sell',status:'needs',name:'Revenue Maturity Matrix',link:'https://docs.google.com/spreadsheets/d/1P730kvscDWaCf_gr8PY8hubDglnJhqjmZ--m7o2dEb0/edit',type:'Menu/Portfolio',programs:[],client:'Brooke/revlogic',what:"Company maturity across different GTM skills and programs",why:"Helps customers understand what it takes to have a successful revenue engine and where their gaps are today",how:'Duplicate the sheet, share with customers. Use to drive mutual understanding of current state vs desired future state.',template:'Already a template'},
+  {id:'s2',playbook:'sell',status:'needs',name:'revlogic FMD (First Meeting Deck)',link:'https://docs.google.com/presentation/d/1Re5GOAYBgH5OU94wjd7Uhtgif9V3SRP-Y2ahupVARdQ/edit',type:'Template',programs:[],client:'revlogic',what:'Our first meeting deck template',why:'Standardized slides to pick & choose from when delivering revlogic pitch, consistent brand voice',how:'Duplicate entire deck, select the slides most relevant to the engagement.',template:'Already a template'},
+  {id:'s3',playbook:'sell',status:'needs',name:'M&A Deck',link:'https://docs.google.com/presentation/d/1L15QuWPfvnYXnQ8GVj5ZzccihPZ8f5T8kRzc-AEWX68/edit',type:'Deck',programs:[],client:'Gigi',what:'Example of how we approach M&A for a specific customer',why:'Created from a real need — solid example of our strategic thinking',how:'Use as reference; could become template.',template:'Could become template'},
+  {id:'s4',playbook:'sell',status:'needs',name:'PLG Deck',link:'https://docs.google.com/presentation/d/1P8sJkiCR9VLvPkcSATB-N0m2p2eIZ6i2lLEm85HIUw8/edit',type:'Deck',programs:[],client:'Gigi',what:'Example of how we approach PLG Growth for a specific customer',why:'Created from a real need — good example of strategic framing',how:'Use as reference; could become template.',template:'Could become template'},
+  {id:'s5',playbook:'sell',status:'needs',name:'Partner Overview (ASP, Revshare, Shortlist)',link:'https://docs.google.com/spreadsheets/d/13Qf4yjvXwLfhaU6Lkx9zBwQdWLbXLC-Dg3yVFrAqvdE/edit',type:'Doc',programs:[],client:'Brian',what:'Breakdown of each partner, what they do, and revshare terms',why:'Essential reference for partner selling conversations',how:'Use during partner conversations and onboarding.',template:''},
+
+  // ── WHAT WE BUILD ──
+  {id:'b0a',playbook:'build',status:'exists',name:'Strategic Account Plan (Taktile) — Tracker',link:'https://docs.google.com/spreadsheets/d/1dRPMsLDkba8U20DpSrytrxdWMJvidSur8bUeumAV7UI/edit',type:'Tracker',programs:['dealREV','pipelineREV'],client:'Taktile',what:'All-encompassing account plan: value pyramid, customer priorities, political landscape, embedded MEDDPICC, 3 Whys, competitive landscape, next steps',why:'Single source of truth for a rep from account planning through closed won — covers every stage of the sales process',how:'Make a copy and use with sales teams. Onboard leaders and managers to this approach.',template:'Could become template'},
+  {id:'b0b',playbook:'build',status:'exists',name:'Strategic Account Plan (Taktile) — Deck',link:'https://docs.google.com/presentation/d/1yJ7LTbJtHA-p9FANtmwJdir32VgtcS5saPcmruDcxgM/edit',type:'Template/Deck',programs:['dealREV','pipelineREV'],client:'Taktile',what:'Deck version of the strategic account plan — same scope, presentation format',why:'Strong visual format for walking leadership through account strategy',how:'Make a copy and customize per account.',template:'Could become template'},
+  {id:'b1',playbook:'build',status:'exists',name:'Impact Meeting Deck',link:'https://docs.google.com/presentation/d/1UG6fSBT4KWoUbPuQs8fyuhG4vn0OsBNeYy1oe4TeQeo/edit',type:'Deck',programs:['dealREV'],client:'Chainguard',what:'Training for key meetings and critical milestones',why:'Strong example of impact meeting structure',how:'Duplicate / rebrand / reference.',template:'Could become template'},
+  {id:'b2',playbook:'build',status:'exists',name:'Comp Intel Training (6 Modules)',link:'',type:'Example',programs:['dealREV'],client:'Redgate',what:'Competitive displacement training from SKO content turned into 5 on-demand micro-learning modules',why:'Shows strategic recommendation to break lengthy training into microlearnings',how:'Use to show how we can take live training content and turn it into on-demand.',template:'Reference only'},
+  {id:'b3',playbook:'build',status:'exists',name:'Sales Process Coaching Cheat Sheet',link:'https://drive.google.com/file/d/1QmjA6h-ytoTnzWjgtr43aQyOB-h2noP2/view',type:'Cheat Sheet',programs:['dealREV'],client:'WIZ',what:'Tips and best practices for a leader coaching reps through the sales process',why:'Quick and easy reference — concise and actionable',how:'Can be duplicated / rebranded / referenced.',template:'Could become template'},
+  {id:'b3b',playbook:'build',status:'exists',name:'FMD Templates Cheat Sheet',link:'https://docs.google.com/presentation/d/1zq7KP082K9vN8GDsC_674HFNtAJMyVLqZrsBFD9i-a8/edit',type:'Template',programs:['rampREV'],client:'Many',what:'Quick-reference cheat sheet for the FMD — ensures reps hit the main talking points per section',why:'Templatized, visually appealing, easy to read and reference quickly',how:'Use as quick reference during ramp. Duplicate and customize per client FMD.',template:'Already a template'},
+  {id:'b4',playbook:'build',status:'exists',name:'Three Whys Training',link:'https://docs.google.com/presentation/d/1KihbMCpgdTJxRLaaH4Ilr-W9vAkdsZ93/edit',type:'Deck',programs:['dealREV'],client:'Aviatrix',what:'Training deck for a 60 minute session on what the three whys is and why it applies',why:'Foundational framework training — clean and reusable',how:'Duplicate / rebrand / reference.',template:''},
+  {id:'b5',playbook:'build',status:'exists',name:'Sales Process Execution Center (SPEC)',link:'https://docs.google.com/presentation/d/12lzZcTld3SlqDjyywzqIcT0kzloQKDpcGDVsW-yKYuI/edit',type:'Template',programs:['dealREV'],client:'Zero Networks',what:'Interactive engagement walking through sales process activities, exit criteria and artifacts',why:'Template for interactive sales process visualization',how:'Use as template for any dealREV.',template:'Already a template'},
+  {id:'b5b',playbook:'build',status:'exists',name:'Sales Process SPEC (xAI)',link:'https://docs.google.com/presentation/d/1CJLTnaI9PMPcRCh0TCkLARHSqn7TCdQXTysVXrcPm6o/edit',type:'Deck/Example',programs:['dealREV'],client:'xAI',what:'Example of Sales Process SPEC — interactive walk through of the sales process with activities, artifacts and exit criteria per stage',why:'Strong real-world example of the SPEC in action',how:'Reference only.',template:'Reference only'},
+  {id:'b6',playbook:'build',status:'exists',name:'NBM Planner Template',link:'https://docs.google.com/document/d/15AJsf6fpRaFWTjFULMJk-BZon43SPCEpFIfaE683jwc/edit',type:'Template',programs:['dealREV'],client:'Chainguard',what:'How to run a new business meeting — template usable by each sales rep for all NBMs',why:'Practical, rep-facing tool',how:'Duplicate per rep / per engagement.',template:'Already a template'},
+  {id:'b6b',playbook:'build',status:'exists',name:'First Meeting Deck Example (xAI)',link:'https://docs.google.com/presentation/d/1D7s1oD2kKT8cLiDTEwig2IU-pmvqMXWBqVgIFEb5DEI/edit',type:'Deck/Example',programs:['dealREV'],client:'xAI',what:'First meeting deck sales reps use when meeting a client and sharing company value',why:'Real example of FMD in production',how:'Reference only.',template:'Reference only'},
+  {id:'b7',playbook:'build',status:'exists',name:'MEDDPICC Scorecard',link:'https://docs.google.com/spreadsheets/d/15XHfn9mBnF-uP6c6Yy_QOwN5dyQcERYwmI8I9Y9EJEQ/edit',type:'Scorecard',programs:['dealREV'],client:'Chainguard',what:'Scorecard for tracking MEDDPICC progress',why:'Clean tracking format',how:'Could become template — duplicate and customize.',template:'Could become template'},
+  {id:'b8',playbook:'build',status:'exists',name:'Mutual Action Plan Template',link:'https://docs.google.com/spreadsheets/d/11HRTQdFOhXAL4dPhrKZc4kme2gR4U8EPn5bPY_cI1TQ/edit',type:'Template',programs:['dealREV'],client:'CastAI',what:'Mutual Action Plan for deal alignment',why:'Clean, proven format',how:'Already a template — duplicate and customize.',template:'Already a template'},
+  {id:'b9',playbook:'build',status:'exists',name:'Mutual Success Plan Template',link:'https://docs.google.com/presentation/d/1oXRj7WVgtRuKHM-18FZw_J4iTnmTV9e9AiTUygA8B3o/edit',type:'Template',programs:['dealREV'],client:'Zenity',what:'Customer-facing resource containing Three Whys, Success Criteria, MAP, Reverse Timeline',why:'Comprehensive customer-facing resource',how:'Use for any dealREV engagement.',template:'Could become template'},
+  {id:'b9b',playbook:'build',status:'needs',name:'MEDDICC/MEDDPICC 101 eLearning',link:'https://docs.google.com/document/d/1vYsoY_s-gRjSGO7FqSTUmK-0X4PbdKanf9_B4rmKx-Y/edit',type:'Training/Course',programs:['dealREV'],client:'revlogic standard',what:'15 min eLearning covering basics of MEDDICC/MEDDPICC component by component',why:'Out-of-the-box white label eLearning for any client',how:'⚠️ NEVER SHARE VIDEO FILES with clients. Video content as Vimeo share links must be loaded into LMS for delivery.',template:'Reference only',warn:true},
+  {id:'b9c',playbook:'build',status:'exists',name:'Customer Success Plan Example',link:'https://docs.google.com/presentation/d/16RQJprmWarBqK0uWEPs6C8Jvr9S0aXo_/edit',type:'Deck/Example',programs:['dealREV'],client:'Zero Networks',what:'Example customer success plan',why:'Real example of what a CSP looks like in practice',how:'Reference for dealREV.',template:''},
+  {id:'b9d',playbook:'build',status:'exists',name:'Leadership Coaching Guide (dealREV)',link:'https://docs.google.com/document/d/1_3pG5w__RhNRiUxM92-3H689h_wF3AzeQIW20mTnbAQ/edit',type:'Doc',programs:['dealREV','leaderREV'],client:'Chainguard',what:'Coaching guide for leaders in dealREV engagements',why:'Comprehensive leader-facing resource',how:'Duplicate / customize per engagement.',template:''},
+  {id:'b9e',playbook:'build',status:'exists',name:'Proposal Deck Template',link:'https://docs.google.com/presentation/d/1BnzofXYzLZ7rNxZZfwtwBJ0Ni0pTjHoe/edit',type:'Deck',programs:['dealREV','valueREV'],client:'Netskope',what:'Proposal deck with clear steps, objectives, area to capture information',why:'Clean proposal structure',how:'Duplicate and customize.',template:''},
+  {id:'b10',playbook:'build',status:'exists',name:"3R's Training Deck (Recruit, Retain, Revenue)",link:'https://docs.google.com/presentation/d/1fQGHwmzxp2fd3-feVAWWUdIJ8DlrvcMzyTEOQ2Qz2rI/edit',type:'Deck',programs:['leaderREV'],client:'Dataiku',what:'Training for leadership on 3Rs framework',why:'Core leadership framework deck',how:'Duplicate / rebrand / reference.',template:'Could become template'},
+  {id:'b10b',playbook:'build',status:'exists',name:'Recruiting Workshops',link:'https://drive.google.com/drive/folders/1mUq2V8uC7sHA-8QN4QyK8Ci7sCAIuBm9',type:'Deck',programs:['leaderREV'],client:'Dataiku',what:'Workshop materials for recruiting training',why:'Hands-on training format',how:'Reference and adapt.',template:''},
+  {id:'b10c',playbook:'build',status:'exists',name:'Recruiting Training',link:'https://docs.google.com/presentation/d/1fQGHwmzxp2fd3-feVAWWUdIJ8DlrvcMzyTEOQ2Qz2rI/edit',type:'Training/Course',programs:['leaderREV'],client:'Dataiku',what:'Full recruiting training deck',why:'Comprehensive recruiting enablement',how:'Duplicate / rebrand.',template:''},
+  {id:'b10d',playbook:'build',status:'exists',name:'Recruiting Playbook',link:'https://drive.google.com/file/d/1idSNnvNOE22jzofRAPAmLWQAORwN4glX/view',type:'Example',programs:['leaderREV'],client:'revlogic',what:'Recruiting playbook example',why:'Shows our approach to recruiting frameworks',how:'Reference.',template:''},
+  {id:'b10e',playbook:'build',status:'exists',name:"3Rs Workshop Deck (Chainguard)",link:'https://docs.google.com/presentation/d/1mTAXLPBXkBv7X021dcZry-v1W7lbBolgzYN1mX1huXQ/edit',type:'Deck',programs:['leaderREV'],client:'Chainguard',what:'3Rs workshop deck from live FY27 Q1 engagement',why:'Current real example of 3Rs in action',how:'Reference / rebrand.',template:''},
+  {id:'b11',playbook:'build',status:'exists',name:'QBR Deck Template',link:'https://docs.google.com/presentation/d/1wIVpFe0z0O_8WGb3QN7nVq-yPb-Z5HQ_u88bSpcg5Q8/edit',type:'Template',programs:['leaderREV','dealREV'],client:'Aviatrix',what:'QBR template',why:'Clean reusable format',how:'Duplicate and customize per client.',template:'Already a template'},
+  {id:'b12',playbook:'build',status:'exists',name:'PG Playbook (Chainguard)',link:'https://drive.google.com/file/d/1lwM-a6VnUdsg4GGX-mykAyB7D_CjsFG2/view',type:'Doc',programs:['pipelineREV'],client:'Chainguard',what:'Full PG playbook — full design in Canva, high-end and ready for print',why:'High-end Canva design, print-ready',how:'Duplicate / rebrand / reference.',template:'Could become template'},
+  {id:'b12b',playbook:'build',status:'exists',name:'PG Playbook (Augment Code)',link:'https://docs.google.com/document/d/1nBvUpaKr1_jQS4GCr_ReLWaFHpJ7GGUay4RBmtHcj1E/edit',type:'Doc',programs:['pipelineREV'],client:'Augment Code',what:'PG playbook for Augment Code',why:'Good example of PG playbook structure',how:'Duplicate / rebrand / reference.',template:'Could become template'},
+  {id:'b12c',playbook:'build',status:'exists',name:'PG Rollout Deck (Chainguard)',link:'https://docs.google.com/presentation/d/1i3UE5pBCCaD2F5ex_brqnL5qIsgLoXoN_OWQaHlnIdg/edit',type:'Deck/Example',programs:['pipelineREV'],client:'Chainguard',what:'Field PG introduction and rollout deck',why:'Real example of how we roll out PG to a field team',how:'Reference only.',template:'Reference only'},
+  {id:'b13',playbook:'build',status:'exists',name:'Territory, Account & PG Plan Template',link:'https://docs.google.com/spreadsheets/d/1WSOhh-J3mykCyoVWfx7To3xsFLy5blW778c-ZBHfq1k/edit',type:'Template',programs:['pipelineREV'],client:'Augment Code',what:'Template for territory, account, and PG planning',why:'Typical template we suggest — well-proven',how:'Make a copy for pipelineREV.',template:'Already a template'},
+  {id:'b13b',playbook:'build',status:'exists',name:'PG Bingo Template',link:'https://docs.google.com/spreadsheets/d/1Gv-vhsAL2ULkZzSQ4C_JQmQIHo9mmJVX/edit',type:'Template',programs:['pipelineREV'],client:'revlogic',what:'PG Bingo gamification template',why:'Fun engagement tool for PG programs',how:'Duplicate and customize per client.',template:''},
+  {id:'b14',playbook:'build',status:'exists',name:'Reconciliation Calculator',link:'https://docs.google.com/spreadsheets/d/1ivJV6RpL9th71lPctK2bXNc2lrJV6yyIZVgnwOAlaDQ/edit',type:'Doc/Template',programs:['pipelineREV'],client:'Klaviyo',what:'How to hit stretch goals with clear formula and metrics',why:'Clear instructions, formula on backend',how:'Use for pipelineREV planning.',template:''},
+  {id:'b14b',playbook:'build',status:'exists',name:'PG Olympics Hype Video',link:'https://f.io/lTwVJX0v',type:'Video',programs:['pipelineREV'],client:'Dataiku',what:'Hype video used to kick off PG Olympics',why:'Great example of how to create excitement around PG programs',how:'Reference — would need updating per client.',template:'Reference only'},
+  {id:'b14c',playbook:'build',status:'exists',name:'PG Leader Training (Chainguard)',link:'https://docs.google.com/presentation/d/1Qx8DT6hHFg8TYn5Y1NVhGHdved3lfN7KDxoXle7xg-A/edit',type:'Deck/Example',programs:['pipelineREV'],client:'Chainguard',what:'Leadership PG introduction and training',why:'Strong example of leader-facing PG enablement',how:'Duplicate / rebrand.',template:''},
+  {id:'b14d',playbook:'build',status:'exists',name:'Prospecting (PG) Playbook (Netskope)',link:'https://drive.google.com/file/d/1wuRqAkwvHnkeB2dVy6TNV6LRk4frti2Y/view',type:'Doc',programs:['pipelineREV'],client:'Netskope',what:'Full design Canva PG playbook with clickable navigation',why:'High-end Canva, full design with clickable navigation',how:'Duplicate / rebrand / reference.',template:'Could become template'},
+  {id:'b14e',playbook:'build',status:'exists',name:'Leadership Coaching Guide (pipelineREV)',link:'https://docs.google.com/document/d/1vyONvjDtURg8wk92C7gt9rDlY1DuP2a6b4yxktQW06M/edit',type:'Doc',programs:['pipelineREV','leaderREV'],client:'Chainguard',what:'Leadership coaching guide for pipelineREV',why:'Useful leader-facing resource for PG programs',how:'Duplicate / customize.',template:''},
+  {id:'b15',playbook:'build',status:'exists',name:'Yoodli Role Plays (AHEAD)',link:'https://app.yoodli.ai/practice/conversation?scenario=suFo2inwhDcfJxveZUJSC2&overrideOrgId=jqGhZ14QutQv2yZwyMrELh',type:'Example',programs:['rampREV'],client:'AHEAD',what:'Example of established role play',why:'Solid role play example with proven format',how:'Use for demo purposes or as template to create new role plays.',template:'Could become template'},
+  {id:'b15b',playbook:'build',status:'exists',name:'Axion Discovery Certification',link:'https://docs.google.com/presentation/d/1YhKfYPYzOPLq-RJFaK5v_KavIKCPhqhYPDZxEwCOesA/edit',type:'Process/Framework',programs:['rampREV'],client:'Axion',what:'Logical process of pre-work and expectations to certify Discovery Call',why:'Structured certification approach for discovery',how:'Adapt for any discovery certification program.',template:''},
+  {id:'b16',playbook:'build',status:'exists',name:'Weekly Missions (8-week onboarding)',link:'https://docs.google.com/presentation/d/1RE6_y54uMpBzmqth4IhFEcU0bTRHVvsBOM9W6eiNMN4/edit',type:'Deck',programs:['rampREV'],client:'Crowdstrike',what:'Weekly missions, deliverables and manager expectations per week for 8-week onboarding',why:'Clear for both learner and manager on expectations and deliverables',how:'Can be used by the learner and the leader.',template:''},
+  {id:'b16b',playbook:'build',status:'exists',name:'Live Role Play Workshops',link:'https://drive.google.com/drive/folders/1yMekGjwdXScAGwPX3JNyn6740WsZP_5g',type:'Training/Course',programs:['rampREV'],client:'Klaviyo',what:'Live role play workshop materials',why:'Hands-on practice format',how:'Reference and adapt.',template:''},
+  {id:'b17',playbook:'build',status:'exists',name:'New Hire Onboarding Checklist',link:'https://docs.google.com/document/d/1gyMQ4kHJSNGH2bVZ5qULAVrq-VDFnFgrST_0UT9QupE/edit',type:'Checklist',programs:['rampREV'],client:'Parloa',what:'Sequenced content, milestones and questions per week for onboarding journey',why:'Clean milestone-based format',how:'Duplicate and customize per client onboarding.',template:''},
+  {id:'b17b',playbook:'build',status:'exists',name:'PG Workshop (Parloa Bootcamp)',link:'https://docs.google.com/presentation/d/1FoxLPKGB_KEdFvL2ExJ-2WTYd0PRvqVuR8yZRY9R9OA/edit',type:'Deck',programs:['rampREV'],client:'Parloa',what:'PG Workshop for Bootcamp session',why:'Incorporates outreach strategies and tactics, and how to focus on the problem above the noise',how:'Duplicate / rebrand / reference.',template:''},
+  {id:'b17c',playbook:'build',status:'exists',name:'Discovery Workshop (Parloa Bootcamp)',link:'https://docs.google.com/presentation/d/1dWytm5ZY8bmXYTG9KDoHRBUgdIyE_bcRYjZmCuPT_vE/edit',type:'Deck',programs:['rampREV'],client:'Parloa',what:'Interactive and engaging discovery workshop during Bootcamp',why:'Solid foundations and engaging activity',how:'Duplicate / rebrand.',template:''},
+  {id:'b18',playbook:'build',status:'exists',name:'xAI Onboarding Plan (Leader Guide)',link:'https://docs.google.com/presentation/d/1SdS5rMA7PJ4PxWDfibhqm-vWxfSMNNB0/edit',type:'Deck',programs:['rampREV'],client:'xAI',what:'Breakdown of weekly onboarding process including guide to coach the rep — all-in-one for leaders',why:'Leader fills in information and shares during check-ins — very practical',how:'Leader fills in information and shares with rep during check-ins.',template:''},
+  {id:'b19',playbook:'build',status:'exists',name:'xAI Onboarding Scorecard',link:'https://docs.google.com/spreadsheets/d/1jxUuOV-16b9bzuLM14hBCYnS1OeIdGmLfwJxOjutkME/edit',type:'Tracker',programs:['rampREV'],client:'xAI',what:'Onboarding journey by milestones, objectives and ratings per rep',why:'Detailed example — note: not a best-practice model, but shows single pane view of onboarding progress',how:'Leader uses to track each rep\'s onboarding progress.',template:''},
+  {id:'b19b',playbook:'build',status:'exists',name:'xAI AI Foundations',link:'https://docs.google.com/presentation/d/1DAKGcRJE9NnS0Gob4g_VEgKmQ6H_LC3I/edit',type:'Deck',programs:['rampREV'],client:'xAI',what:'AI fundamentals and history training deck',why:'Strong example of AI fundamentals content we can build',how:'Reference / adapt for AI-forward clients.',template:''},
+  {id:'b19c',playbook:'build',status:'exists',name:'PG Best Practices (xAI)',link:'https://docs.google.com/presentation/d/1ZsHBx3AckTEhTGsQIemAE1gcEcAJOXmLSbYExwQpyLE/edit',type:'Deck',programs:['rampREV'],client:'xAI',what:'PG Best Practices training deck',why:'Practical, tactical PG guidance',how:'Duplicate / reference.',template:''},
+  {id:'b19d',playbook:'build',status:'exists',name:'Discovery eLearning (xAI)',link:'https://docs.google.com/presentation/d/1_hk-WJb0ge_mzn0YrAWYI8Ftm-xZO6GbE7lcDEj572Y/edit',type:'Deck',programs:['rampREV'],client:'xAI',what:'Discovery Foundations eLearning',why:'Classic eLearning covering Discovery foundations — reusable',how:'Duplicate / reference.',template:'Could become template'},
+  {id:'b20',playbook:'build',status:'exists',name:'RevSpace Zero Networks Example',link:'https://zeronetworks.revspace.io/content-portal',type:'Example',programs:['rampREV'],client:'Zero Networks',what:'Example of established RevSpace platform',why:'Shows lots of content, courses, learning paths — great demo asset',how:'Use for demo purposes.',template:'Reference only'},
+  {id:'b20b',playbook:'build',status:'exists',name:'Armada First Meeting Role Play Scorecard',link:'https://docs.google.com/presentation/d/1U2GscRBxIxJF0W-V7ReZ0S4Huwh8ubMc/edit',type:'Scorecard',programs:['rampREV'],client:'Armada',what:'Template for scoring FMD role play',why:'Clean scoring template for first meeting role plays',how:'Duplicate and customize.',template:''},
+  {id:'b20c',playbook:'build',status:'exists',name:'xAI Pitch Score Sheet',link:'https://docs.google.com/presentation/d/11pX75sp3zQ0UJSWeAnHg38eNg5GTI-Kc/edit',type:'Scorecard',programs:['rampREV'],client:'xAI',what:'Worksheet for leaders to follow the pitch and score per section',why:'Clear scoring framework for pitch review',how:'Provide to leaders for pitch scoring sessions.',template:'Could become template'},
+  {id:'b20d',playbook:'build',status:'exists',name:'Cerebras Blueprint for Success — How We Win',link:'https://docs.google.com/presentation/d/1eqL83qEjKu3g02HLPdfAiC_Hvnu_u75b/edit',type:'Deck',programs:['rampREV'],client:'Cerebras',what:'Bootcamp deck defining "how we win" blueprint for success',why:'Strong example of a client-specific blueprint deck',how:'Reference for building similar decks.',template:''},
+  {id:'b21',playbook:'build',status:'exists',name:'Value Messaging eLearning (Rise Course)',link:'https://360.articulate.com/review/content/c827b7ef-c4db-433e-ae7d-80511b692324/review',type:'Example',programs:['valueREV'],client:'AHEAD',what:'Well-designed fundamental course on Value Messaging',why:'Well received by client — strong design and delivery',how:'Use to recreate Value Messaging eLearning OR as an example.',template:'Could become template'},
+  {id:'b21b',playbook:'build',status:'exists',name:'Live Value Messaging Workshop',link:'https://drive.google.com/drive/folders/1GxTsq8qHIf7QLLO3QRM82RqWjF38xgb5',type:'Training/Course',programs:['valueREV'],client:'AHEAD',what:'Live workshop materials for value messaging',why:'Hands-on workshop format for value messaging delivery',how:'Reference and adapt.',template:''},
+  {id:'b21c',playbook:'build',status:'exists',name:'Value Messaging Leader Trainings',link:'https://drive.google.com/drive/folders/1sFMc2P7G7vpbEb-TBi4tYBoP9W88uSQy',type:'Training/Course',programs:['valueREV'],client:'AHEAD',what:'Leader-specific value messaging training materials',why:'Dedicated leader track for value messaging',how:'Reference and adapt.',template:''},
+  {id:'b22',playbook:'build',status:'exists',name:'Role Play Personas for Value Messaging',link:'https://docs.google.com/presentation/d/13vpjOWDGKBjw53iIgS4OEsZwqZPnjvfZKHWn9YMX9Jo/edit',type:'Example',programs:['valueREV'],client:'AHEAD',what:'Detailed persona profiles for role play scenarios to practice messaging framework',why:'Shows wide range of personas a rep can choose from to practice',how:'Customer-facing showcase of scenarios we can build for AI or live role play.',template:'Could become template'},
+  {id:'b22b',playbook:'build',status:'exists',name:'Role Play Build Master List',link:'https://docs.google.com/spreadsheets/d/1bZJ5r7ycBtIDpbcRSm-bzHaz3pC6VSCKE5-xuAKzuFo/edit',type:'Tracker',programs:['valueREV'],client:'AHEAD',what:'Build tracker for the role play scenarios we built for AHEAD',why:'Demonstrates our ability to operationalize an extensive list of personas and scenarios',how:'Show the vast variety of practice scenarios we can build for clients.',template:'Could become template'},
+  {id:'b23',playbook:'build',status:'exists',name:'Value Framework Training Deck (Attentive)',link:'https://docs.google.com/presentation/d/1l4_qxfw-jZVEmeKm72QdUuaB3zmdSudSj16E7k1CP40/edit',type:'Deck',programs:['valueREV'],client:'Attentive',what:'Training for value framework rollout — links value messaging directly to MEDDPICC',why:'Strong integration of framework + qualification methodology',how:'Duplicate / rebrand / reference.',template:'Could become template'},
+  {id:'b23b',playbook:'build',status:'exists',name:'AHEAD Unified Messaging Framework',link:'https://drive.google.com/file/d/1U2guM7EXQMjoxTSmsDNfXkhSNey46dFn/view',type:'Process/Framework',programs:['valueREV'],client:'AHEAD',what:'Value framework for a reseller with large product portfolio vs single product',why:'Reference for similar complex multi-product clients',how:'Reference for when building for a similar client.',template:'Reference only'},
+  {id:'b23c',playbook:'build',status:'exists',name:'Chainguard ValueREV Kickoff',link:'https://docs.google.com/presentation/d/17Ye8W0IrGbcaE_OodlUCC03zCMTOk2928d_uLzr1hxw/edit',type:'Deck',programs:['valueREV'],client:'Chainguard',what:'ValueREV kickoff deck',why:'Live example of a valueREV kickoff',how:'Reference / duplicate.',template:''},
+  {id:'b23d',playbook:'build',status:'exists',name:'Chainguard ValueREV Training with MEDDPICC',link:'https://docs.google.com/presentation/d/1ijCdPBJhj3aTIx_MNuXlQ4c9goPmZrF2iBAFLHn4cRY/edit',type:'Deck',programs:['valueREV'],client:'Chainguard',what:'Value framework training linked to MEDDPICC',why:'Strong example of integrated value + MEDDPICC training',how:'Reference / duplicate.',template:''},
+  {id:'b23e',playbook:'build',status:'exists',name:'Wiz Value Framework',link:'https://drive.google.com/file/d/1lNDxg-oQN5eBmSL2kD6bmn53g9d-r-0I/view',type:'Process/Framework',programs:['valueREV'],client:'Wiz',what:'Tight and succinct framework for value messaging with 3 key personas',why:'Very clean, concise format — model for simplicity',how:'Reference for when building for a similar client.',template:'Reference only'},
+  {id:'b23f',playbook:'build',status:'exists',name:'Horizon3 Value Framework',link:'https://drive.google.com/file/d/1-YKDV5KNX8Nh5aCa8t6hc9ezJts07E9x/view',type:'Process/Framework',programs:['valueREV'],client:'Horizon3',what:'Value framework for Horizon3',why:'Reference for cybersecurity-adjacent value frameworks',how:'Reference for when building for a similar client.',template:''},
+  {id:'b24',playbook:'build',status:'needs',name:'Value Selling 101 eLearning',link:'https://docs.google.com/document/d/1thTMxDCXtRuAdao-e1aWdx7iWyKo2P_E6FmQ1QrkWK0/edit',type:'Training/Course',programs:['valueREV'],client:'revlogic standard',what:'30 min eLearning covering basics of Value Selling, Value Framework, persona-based thinking',why:'Out-of-the-box white label eLearning for any client',how:'⚠️ NEVER SHARE VIDEO FILES with clients. Must be loaded into LMS for delivery.',template:'',warn:true},
+  {id:'b24b',playbook:'build',status:'exists',name:'Leadership Coaching Guide (valueREV)',link:'https://docs.google.com/document/d/17niTRpg7XFs5qOtK9mFYaIkb5KFp5ey2oLUYsBIaC14/edit',type:'Doc',programs:['valueREV','leaderREV'],client:'Chainguard',what:'Leadership coaching guide for valueREV engagements',why:'Comprehensive leader-facing resource',how:'Duplicate / customize per engagement.',template:''},
+  {id:'b25',playbook:'build',status:'exists',name:'Out of the Box Playbook Training Menu',link:'https://docs.google.com/presentation/d/1yKoDR9bdFt-WhpkUDiedqJyV-LGquqv9PIbKwxHHGN0/edit',type:'Menu/Portfolio',programs:['REVstudios'],client:'EliteGTM',what:'Catalog of all out-of-the-box courses built around sales process motions',why:'Ready-to-go eLearnings around core GTM topics',how:'Show as menu/catalog of playbook trainings that exist.',template:'Reference only'},
+  {id:'b26',playbook:'build',status:'exists',name:'SKO Video Content Examples',link:'https://f.io/na6cZnE1',type:'Menu/Portfolio',programs:['REVstudios'],client:'Chainguard',what:'Various types of videos we create for client SKOs',why:'Strong portfolio examples across video types',how:'Use in sales conversations to show production quality.',template:'Reference only'},
+  {id:'b26b',playbook:'build',status:'exists',name:'Partner Marketing Videos',link:'https://f.io/shYhEm8d',type:'Menu/Portfolio',programs:['REVstudios'],client:'Aurasell/RevSpace',what:'Social media campaigns for partners',why:'Shows our video production capability for partner marketing',how:'Use as example in partner conversations.',template:'Reference only'},
+  {id:'b26c',playbook:'build',status:'exists',name:'Bootcamp Opener/Hype Video Examples',link:'https://f.io/BzciV5e8',type:'Other',programs:['REVstudios'],client:'xAI/AugmentCode',what:'Creative video openers for client bootcamp',why:'Shows the creative/production quality we can bring to bootcamps',how:'Use as example for clients considering video production.',template:'Reference only'},
+  {id:'b26d',playbook:'build',status:'exists',name:'Value Hypothesis Training Video',link:'https://drive.google.com/file/d/1MIwAqvf0mpzxWSqWvAFhdFyP6oZKBElo/view',type:'Video',programs:['REVstudios','dealREV'],client:'Dataiku',what:'Training video on value hypothesis',why:'Strong video example of value hypothesis content',how:'Use as example or reference.',template:'Reference only'},
+  {id:'b26e',playbook:'build',status:'exists',name:'Use Case Videos for SKO',link:'https://drive.google.com/drive/folders/1xyAiBFHRzkmHLTz-oJEXXBZVTHvJ8Sti',type:'Video',programs:['REVstudios'],client:'AHEAD',what:'Use case videos created for SKO',why:'Strong portfolio of SKO video content',how:'Use as example for clients considering SKO video.',template:'Reference only'},
+  {id:'b27',playbook:'build',status:'exists',name:'Synthesia Video Examples',link:'',type:'Recording',programs:['REVstudios','rampREV','dealREV','valueREV'],client:'Various',what:'Examples of what we can build with Synthesia',why:'Good reference for AI video capabilities',how:'Use as example/reference in client conversations.',template:'Reference only'},
+  {id:'b27b',playbook:'build',status:'exists',name:'EliteGTM RevLogic Academy Module',link:'https://f.io/nWVcCYYb',type:'Other',programs:['REVstudios','rampREV'],client:'EliteGTM',what:'Example from our sales academy',why:'Shows the quality of our academy content',how:'Use as demo/reference.',template:'Reference only'},
+  {id:'b28',playbook:'build',status:'exists',name:'Leadership Coaching Guide (rampREV)',link:'https://docs.google.com/document/d/1LSeE4lc5_RVk8nHFab9jCfm3F5wPYWwNcDD4mT-esXk/edit',type:'Doc',programs:['rampREV','leaderREV'],client:'Chainguard',what:'Coaching guide for leaders in rampREV engagements',why:'Comprehensive leader-facing resource',how:'Duplicate / customize per engagement.',template:''},
+
+  // ── HOW WE DELIVER — General ──
+  {id:'dg1',playbook:'deliver',status:'exists',name:'Account Plans (Internal)',link:'https://docs.google.com/spreadsheets/d/18WK8yhvRRPsIhF15UcOE1nACQBhY1hwZc5jTS4Qg9zI/edit',type:'Tracker',programs:['dealREV','pipelineREV'],client:'Jesse',what:'Used internally to track account health — important to our operating model, may never be shown to a client',why:'Critical internal operating tool for account management',how:'Use internally to track account health across engagements.',template:''},
+  {id:'dg2',playbook:'deliver',status:'exists',name:'Stakeholder Map',link:'https://docs.google.com/presentation/d/1uMDUsnUx6xN4YMW41wRzFM6-MKNwMAzytydb4EBOiDo/edit',type:'Tracker',programs:[],client:'Jesse',what:'All the different stakeholders involved in an engagement — shared with client',why:'Useful for aligning with clients on who is involved and their roles',how:'Share with client to align on stakeholder landscape.',template:''},
+  {id:'dg3',playbook:'deliver',status:'exists',name:'Project Tracker',link:'https://docs.google.com/spreadsheets/d/1RjLhYqngQ-IWQAEfi_1JBT775AYkQQ3nDSUAqmo6iMM/edit',type:'Tracker',programs:[],client:'Jesse',what:'All-in-one tracker for milestones, key customer info',why:'Single pane of glass for project management',how:'Duplicate per engagement.',template:''},
+  {id:'dg4',playbook:'deliver',status:'exists',name:'Reconciliation Plan',link:'https://docs.google.com/spreadsheets/d/1PBz-aSLsYXhV908YpdctWy3ejXJDy-Kilwb_ZOOldRY/edit',type:'Tracker',programs:[],client:'Tiff',what:'Project status at a glance — walk key stakeholders through completion at milestones',why:'Clear milestone reporting format',how:'Duplicate and replace with SOW line items.',template:'Could become template'},
+  {id:'dg5',playbook:'deliver',status:'needs',name:'Milestone Tracker',link:'https://docs.google.com/spreadsheets/d/1eJ5mHknsxl4cDnUoIaH_HGwcMJGzT4Dclj5JUvIs8r8/edit',type:'Tracker',programs:[],client:'Kristen',what:'Big milestone tracker across multiple REVs for one client',why:'Good one-view/visual — could be a lot stronger',how:'Reference — needs improvement before broad use.',template:''},
+  {id:'dg6',playbook:'deliver',status:'exists',name:'Master SOW (Updated March 2026)',link:'https://docs.google.com/document/d/1hvHNPhohLhDY0c83DhXZxYdqk5vYPF-eWt5YFp00k04/edit',type:'Template',programs:[],client:'revlogic',what:'Master SOW with all REVs',why:'The definitive SOW template — most current version',how:'Use as starting point for all new client SOWs.',template:'Already a template'},
+
+  // ── HOW WE DELIVER — dealREV ──
+  {id:'d1',playbook:'deliver',status:'exists',name:'dealREV + rampREV Kickoff Deck (Parloa)',link:'https://docs.google.com/presentation/d/1vws_2AiCPBDziKj3CFCPDnijmmzyon-cn0axD4xspbQ/edit',type:'Deck',programs:['dealREV','rampREV'],client:'Kristen',what:'Kickoff deck for combined dealREV + rampREV engagement',why:'Covers scope, timeline, and examples of outputs for each REV',how:'Duplicate; select slides most relevant to the engagement.',template:''},
+  {id:'d1b',playbook:'deliver',status:'exists',name:'Call Recording — Sales Process Review (Parloa)',link:'https://otter.ai/u/DjOYydxATMmMn8g116Tt_t0F1Qo',type:'Recording',programs:['dealREV'],client:'Kristen',what:'Call recording of presenting the drafted sales process to the larger team at Parloa and gathering feedback',why:'Intro is strongest — shows how to win hearts and minds with a skeptical team',how:'Reference only — great example of how to establish credibility.',template:''},
+  {id:'d1c',playbook:'deliver',status:'exists',name:'Example PG & Territory Plan Templates',link:'https://docs.google.com/spreadsheets/d/1ednvSM2Ud-INxfTvKZQWDBkuzyKsTMueFxxXyWnw_08/edit',type:'Example',programs:['dealREV','pipelineREV'],client:'Jesse',what:'Multiple versions of PG/Territory plan/Account Plans — shared with client for async template building',why:'Clever approach to async template building with client input',how:'Share with client and ask them to highlight what they like and dislike.',template:''},
+  {id:'d1d',playbook:'deliver',status:'needs',name:'Sales Process Breakdown (Workshop Slides)',link:'https://docs.google.com/presentation/d/1Nhnd22gv-s9BgMAFxQt0rqEfFwNmye3RYwpAty8XvWo/edit',type:'Example',programs:['dealREV'],client:"D'Andre",what:'Slides used during a live workshop to discuss each stage, gather feedback, and align on sales process',why:'Real example of live workshop facilitation',how:'Reference for running sales process alignment workshops.',template:''},
+  {id:'d1e',playbook:'deliver',status:'exists',name:'SPEC for RevSpace (Cast AI)',link:'https://docs.google.com/presentation/d/1g5MAIrcyMySCXAOQO_BEmcm7N6k6IddeQGCyFUfLGDI/edit',type:'Deck',programs:['dealREV'],client:'Laura/Kelly',what:'The deck that powers the Sales Process Execution Center in RevSpace — interactive map of the sales process with all assets embedded',why:'Strong example of how to operationalize the SPEC inside RevSpace',how:'Reference for RevSpace SPEC implementations.',template:''},
+  {id:'d1f',playbook:'deliver',status:'exists',name:'Complete Assets Suite (Cast AI dealREV)',link:'https://drive.google.com/drive/folders/1ua2PC3p0ugKPwx3nazVwYHk68O9arrbp',type:'Other',programs:['dealREV'],client:'Jackie',what:'Full suite of dealREV deliverables including Territory Plan, MAP, Value Hypothesis',why:'Good example of the full suite for a dealREV',how:'Use as reference for dealREV scope and deliverables.',template:'Reference only'},
+  {id:'d1g',playbook:'deliver',status:'exists',name:'Content Library (dealREV/MEDDPICC)',link:'https://drive.google.com/drive/folders/13e2IiiCmT1wg6J0duq0sKFJnCLomKrms',type:'Example',programs:['dealREV'],client:'Kelly',what:'Samples of common deliverables for a dealREV/MEDDPICC/value selling engagement',why:'Broad reference library of what a dealREV produces',how:'Use as reference or to show scope to prospects.',template:'Reference only'},
+  {id:'d1h',playbook:'deliver',status:'exists',name:'Core Slides — Customer Facing EBR Deck (Talkdesk)',link:'https://docs.google.com/presentation/d/1w_xGWbo-4HjBsCAN8LefHXKnHeBCIq5X/edit',type:'Example',programs:['dealREV'],client:'Talkdesk',what:'Sample of a core EBR deck, industry agnostic',why:'Clean industry-agnostic EBR format',how:'Reference for building EBR decks.',template:''},
+
+  // ── HOW WE DELIVER — pipeREV ──
+  {id:'dp1',playbook:'deliver',status:'exists',name:'pipeREV Mutual Action Plan',link:'https://docs.google.com/spreadsheets/d/1_Qjs97LKzlX82FKKdZpkW49iYurVTloDoQWh0fVQUIc/edit',type:'Tracker',programs:['pipelineREV'],client:'Megan',what:'Mutual action plan for pipeREV engagements',why:'Clean tracking format',how:'Duplicate and customize per pipelineREV.',template:'Already a template'},
+  {id:'dp2',playbook:'deliver',status:'exists',name:'Kickoff Deck Examples (Auctane/Talkdesk/Forter)',link:'https://docs.google.com/presentation/d/1-E8iVYNlgS6T_JIcUmossWMm2NdhNZuiFpkgUk8EKxg/edit',type:'Deck/Example',programs:['pipelineREV'],client:'Megan',what:'Multiple kickoff deck examples across clients',why:'Real examples of how we open pipelineREV engagements',how:'Reference for building new kickoff decks.',template:'Could become template'},
+  {id:'dp3',playbook:'deliver',status:'exists',name:'PG Pack Asset Tracker',link:'https://docs.google.com/spreadsheets/d/1Es-08alr9gW3mItlzTxBz0WkH9OqfB1_TIz_PuRZ3xc/edit',type:'Tracker',programs:['pipelineREV'],client:'Megan',what:'Tracker for all PG pack assets',why:'Clear visibility into what has been built',how:'Use to manage pipelineREV deliverables.',template:'Already a template'},
+  {id:'dp4',playbook:'deliver',status:'exists',name:'PG Planner Template',link:'https://docs.google.com/spreadsheets/d/1ZXSEwO6XMWq8gx2ckIWwglMbL6sFE_bY/edit',type:'Template',programs:['pipelineREV'],client:'Megan',what:'Template for PG planning',why:'Reusable planning format',how:'Duplicate for each pipelineREV.',template:'Already a template'},
+  {id:'dp5',playbook:'deliver',status:'exists',name:'PG Training Suite (Netskope)',link:'https://docs.google.com/presentation/d/1ZaNAzvukHdFNWBWGNJ3geTqvrhWCfdJuJ_c5RCzCbvY/edit',type:'Deck/Example',programs:['pipelineREV'],client:'Netskope/Megan',what:'Suite of PG training decks: Cold Calling, AI for Account Research, PG Monday prep, Strong PG Message, Objection Handling',why:'Comprehensive training coverage for PG motions',how:'Duplicate / rebrand per client.',template:'Reference only'},
+  {id:'dp6',playbook:'deliver',status:'exists',name:'PG Bootcamp Training (Chainguard)',link:'https://docs.google.com/presentation/d/1KEYUy60NdrL82Rsfa8AujlPFOmc9X3PZP0MRc043pc8/edit',type:'Deck/Example',programs:['pipelineREV'],client:'Chainguard/Megan',what:'Bootcamp training for PG',why:'Strong example of bootcamp-style PG delivery',how:'Reference for building new PG bootcamp sessions.',template:'Reference only'},
+  {id:'dp6b',playbook:'deliver',status:'exists',name:'PG 101 eLearning Course Outline',link:'https://docs.google.com/document/d/1SHfhMGUz0g0BIafgxtz90SQ2ci48_F5wyOr3JMjCBuw/edit',type:'Template',programs:['pipelineREV'],client:'Megan',what:'Course outline for PG 101 eLearning',why:'Starting structure for building PG 101 on-demand content',how:'Use as starting point for PG 101 eLearning build.',template:'Already a template'},
+  {id:'dp6c',playbook:'deliver',status:'exists',name:'PG Bingo Communications',link:'https://docs.google.com/document/d/1Ylj8zc8BvQmFuPTt8cSLZnIrx1ssNx7vUSad6SYZsLc/edit',type:'Email/Comms',programs:['pipelineREV'],client:'Megan',what:'Communications template for PG Bingo program',why:'Ready-to-use comms for running PG Bingo',how:'Duplicate and customize per client.',template:'Could become template'},
+  {id:'dp7',playbook:'deliver',status:'exists',name:'Sample Playbooks — Longform (Forter)',link:'https://docs.google.com/document/d/1a_4VM4FMQJVcNO4M7cr2aiFBzvrDrGGw1UwASPcjRQI/edit',type:'Example/Doc',programs:['pipelineREV'],client:'Tiff',what:'Collection of 4 playbooks in long form being reviewed before CMS',why:'Shows our longform playbook writing quality',how:'Reference for longform playbook structure.',template:''},
+  {id:'dp7b',playbook:'deliver',status:'exists',name:'PG Playbook (Parloa)',link:'https://docs.google.com/document/d/12WgYWDhoTlEF3cZCWV5tvCqiwJwGEADxmBc0-H4NAIQ/edit',type:'Doc/Example',programs:['pipelineREV'],client:'Megan',what:'Longform PG Playbook for Parloa',why:'Good longform playbook example',how:'Reference / duplicate.',template:''},
+
+  // ── HOW WE DELIVER — rampREV ──
+  {id:'d0a',playbook:'deliver',status:'exists',name:'RampREV Value Proposition',link:'https://docs.google.com/presentation/d/1stsMcqq7Guzad4ublMxnvn2pB8868O26MyCf3DtcRrY/edit',type:'Deck',programs:['rampREV'],client:'Kelly',what:'Internal and external resource explaining what rampREV is — timelines, POV, and recommendations for a successful rampREV',why:'Based on 2+ years running rampREVs — authoritative starting point for the full scope',how:'Strategize with LXD team before sharing with customers to align on timelines and recommendations.',template:'Reference only'},
+  {id:'d0b',playbook:'deliver',status:'exists',name:'rampREV Positioning / Pitch Deck',link:'https://docs.google.com/presentation/d/1stsMcqq7Guzad4ublMxnvn2pB8868O26MyCf3DtcRrY/edit',type:'Deck',programs:['rampREV'],client:'Kelly',what:"RevLogic's POV on what good ramp looks like",why:'Sharp positioning for rampREV in sales and kickoff conversations',how:'Use to pitch or introduce rampREV to a new client or internal stakeholder.',template:'Reference only'},
+  {id:'d0c',playbook:'deliver',status:'exists',name:'Generic Onboarding Checklist Template',link:'https://docs.google.com/document/d/146FV2qBYbZXwvpHHBjbYRLtkpzvd_xlkkOqycQSi4o4/edit',type:'Template',programs:['rampREV'],client:'Kelly',what:'Template onboarding checklist for a generic 6-week onboarding journey',why:'Ready-to-use starting point before client customization',how:'Duplicate and customize per client engagement.',template:'Could become template'},
+  {id:'d0d',playbook:'deliver',status:'exists',name:'rampREV Internal Kickoff Call (Fable)',link:'https://otter.ai/u/cO2URSHuccFN2hq53N4Q2hnFb7k',type:'Recording',programs:['rampREV'],client:'Kelly',what:'Example internal kickoff call for a rampREV',why:'Shows how to come prepared, topics to cover, action plan to make',how:'Reference only — example of what should be covered in internal handoff.',template:'Could become template'},
+  {id:'d0e',playbook:'deliver',status:'exists',name:'rampREV External Kickoff Deck (Parloa)',link:'https://docs.google.com/presentation/d/1vws_2AiCPBDziKj3CFCPDnijmmzyon-cn0axD4xspbQ/edit',type:'Deck',programs:['rampREV'],client:'Kristen & Kelly',what:'External kickoff deck for a rampREV engagement',why:'Strong external-facing kickoff format',how:'Duplicate for new rampREV engagements.',template:'Could become template'},
+  {id:'d8',playbook:'deliver',status:'exists',name:'rampREV Curriculum Matrix (dbt Labs)',link:'https://docs.google.com/spreadsheets/d/1GmKB9tqae8xZzvFYoGwRzdFXu2Mjg9XpexAKzqsIm-8/edit',type:'Tracker',programs:['rampREV'],client:'Meghan C.',what:'Content audit and build tracker for onboarding program',why:'Single source for all content tied to rampREV project',how:'Use to organize and track rampREV content build.',template:'Reference only'},
+  {id:'d8b',playbook:'deliver',status:'exists',name:'rampREV Curriculum Matrix (Augment Code)',link:'https://docs.google.com/spreadsheets/d/15rOMtWtyrcmKXwb6cJ2WKDhU7PooFCrJVkvWqbrUG8M/edit',type:'Tracker',programs:['rampREV'],client:'Laura B',what:'Content audit and build tracker for onboarding program',why:'Second example of curriculum matrix approach',how:'Reference and adapt.',template:'Reference only'},
+  {id:'d8c',playbook:'deliver',status:'exists',name:'Bootcamp Master Sheet',link:'https://docs.google.com/spreadsheets/d/1rZakbjVjgycj_K58_f9ySCLd4-8Mfuts/edit',type:'Tracker',programs:['rampREV'],client:'Megan A.',what:'Logistics tracker for bootcamp facilitation',why:'Solid logistics management template',how:'Duplicate for each bootcamp.',template:'Already a template'},
+  {id:'d8d',playbook:'deliver',status:'exists',name:'Project Tracker (rampREV)',link:'https://docs.google.com/spreadsheets/d/13C9zAwSHOfB-8NM5KM_tFrIA-1pH3evtb5G3LHom2ug/edit',type:'Tracker',programs:['rampREV'],client:'Jesse',what:'Project and milestone tracker for a rampREV',why:'Clean project management format',how:'Duplicate for each rampREV.',template:'Could become template'},
+  {id:'d9',playbook:'deliver',status:'exists',name:'dbt Labs Onboarding Overview',link:'https://docs.google.com/presentation/d/1b9ZYvWbvkmol-VE1YawbTijo44Im7CfhERNLlztOtlw/edit',type:'Deck/Example',programs:['rampREV'],client:'Josh',what:'12-week onboarding program with content, activity, milestones, leading indicators, and onsite agenda',why:'Framework tailored to virtual or hybrid onboarding — clear path to ramp to quota',how:'Use as alignment tool — share for thousand-foot-view agreement before reverse engineering modules.',template:'Could become template'},
+  {id:'d9b',playbook:'deliver',status:'exists',name:'dbt Labs rampREV SOW',link:'https://docs.google.com/document/d/1lNuXzw_qq9IXnkuc7BLCubl2LU0hi1KQewa1BgMF1Eo/edit',type:'Doc/Example',programs:['rampREV'],client:'Jess',what:'SOW for rampREV for dbt Labs — one of our most recent live SOWs',why:'Current, live SOW example for rampREV',how:'Use as example for process, deliverables and expectations.',template:'Reference only'},
+  {id:'d9c',playbook:'deliver',status:'exists',name:'EliteGTM Playbook Content Menu',link:'https://docs.google.com/presentation/d/1yKoDR9bdFt-WhpkUDiedqJyV-LGquqv9PIbKwxHHGN0/edit',type:'Menu/Portfolio',programs:['rampREV'],client:'Kelly',what:'Foundational playbook training menu — what is available through EliteGTM Academy',why:'Out-of-the-box content that can plug into rampREV or dealREV — saves building one-off content',how:'EliteGTM can be provided as limited access. Must incorporate into SOW — comes with cost.',template:'Reference only'},
+  {id:'d10',playbook:'deliver',status:'exists',name:'Benchling Onboarding Overview',link:'https://docs.google.com/presentation/d/1k2NS32mPjWZO2uYfuAV0NEH7r9UoS6s2iN3pXIkcGIk/edit',type:'Deck/Example',programs:['rampREV'],client:"D'Andre",what:'12-week onboarding program with 2-week onsite agenda',why:'Strong example of 12-week ramp — not our standard rampREV but good model',how:'Model for training outline and path.',template:'Could become template'},
+  {id:'d11',playbook:'deliver',status:'exists',name:'xAI Bootcamp Day 1 & 2 Materials',link:'https://docs.google.com/presentation/d/1TO6f-a46dM2pwwF_49m8ei3u-7UrdY6i-9XiWmcvjAo/edit',type:'Deck/Example',programs:['rampREV'],client:"D'Andre",what:'Day 1 and Day 2 resources and slides for bootcamp',why:'Strong format, branding, proven success with live presentation',how:'Use as model for bootcamp slides.',template:'Could become template'},
+  {id:'d11b',playbook:'deliver',status:'exists',name:'Onboarding Curriculum Matrix (A360)',link:'https://docs.google.com/spreadsheets/d/1rxj9rWT9tdOjXn6uZZLxJYDFrTUP6TG_bmQPb4Pps8U/edit',type:'Tracker',programs:['rampREV'],client:'Laura',what:'Content audit and build tracker for onboarding program',why:'Another solid example of curriculum matrix',how:'Use to organize onboarding content.',template:'Could become template'},
+  {id:'d11c',playbook:'deliver',status:'exists',name:'xAI Curriculum Matrix',link:'https://docs.google.com/spreadsheets/d/1j5hl_X69agynSRBfVyGe418jSTUgu6_FTr5-xnRGWVI/edit',type:'Doc/Example',programs:['rampREV'],client:'Laura',what:'Overview of content/assets for xAI onboarding — organized with build and module trackers',why:'Organized, has build and module trackers — template to use for validating and aligning content',how:'Single repository for all resources tied to rampREV project.',template:'Could become template'},
+
+  // ── HOW WE DELIVER — valueREV ──
+  {id:'dv1',playbook:'deliver',status:'exists',name:'Value Alignment Workshop Deck (Metronome)',link:'https://docs.google.com/presentation/d/1dZ7AppWD7T6STSDX8MVx9qqDwMj_XCBIdMWkfU4wHYQ/edit',type:'Deck',programs:['valueREV'],client:'Metronome',what:'Leadership Alignment Workshop deck with customer insights and interview heatmap intro',why:'Modified workshop deck with strong customer insight framing',how:'Reference and adapt for valueREV alignment workshops.',template:''},
+  {id:'dv1b',playbook:'deliver',status:'exists',name:'Interview Discovery Guide by Role',link:'https://docs.google.com/document/d/1aFsBikYX4BbN_7zv23W84-RYAMz6ZwpAJAWfWTl6bbg/edit',type:'Doc',programs:['valueREV'],client:'revlogic',what:'Interview questions by role for valueREV discovery',why:'Role-based interview guide ensures comprehensive discovery',how:'Use to structure interviews across roles in valueREV.',template:''},
+  {id:'dv1c',playbook:'deliver',status:'exists',name:'AcuityMD Interview Debrief',link:'https://docs.google.com/presentation/d/1TLTI8Gxuela1Z2To7ycJK8hH-Mkoq7kUwuFhhyvmEsQ/edit',type:'Deck',programs:['valueREV'],client:'AcuityMD',what:'Interview Debrief deck ahead of Alignment workshop',why:'Used for a Value lite — good model for accelerating alignment with limited time',how:'Reference for interview debrief structure.',template:''},
+  {id:'dv2',playbook:'deliver',status:'exists',name:'Interview Library (AHEAD/Horizon3)',link:'https://docs.google.com/spreadsheets/d/1dLDdNW787Osu3XRZDjM18BPRrLU4bDsA2-bQMQlCo7A/edit',type:'Process/Framework/Example',programs:['valueREV'],client:'Jess/Kristen',what:'How to organize/summarize data from internal/external interviews — links to individual interviews and provides insights in one place',why:'Strong signal extraction from multiple interviews — aligns with data needed for valueREV',how:'Use AI prompts to generate outcomes from call transcripts; paste into fields; synthesize insights to create Value Framework.',template:'Could become template'},
+  {id:'dv2b',playbook:'deliver',status:'exists',name:'Recap Email (Post Interview)',link:'https://drive.google.com/file/d/17-llhi0oabQ_Wn3daFtmJsoPmYl9A67K/view',type:'Email/Comms',programs:['valueREV'],client:'Josh',what:'Follow up/recap to share with stakeholders after valueREV interview',why:'Clear takeaways for the participant — ensures their voice is heard',how:'Send post interview to internal/external interviewees.',template:'Could become template'},
+  {id:'dv3',playbook:'deliver',status:'exists',name:'Value Framework Alignment Workshop Comms (Parloa)',link:'https://docs.google.com/document/d/1PpGbh7DLbjEJ-88GESHoDSkGcgLfgkWeNF4mOKtNErE/edit',type:'Template',programs:['valueREV'],client:'Tiff',what:'Communications template for sends ahead of and after a Value Framework Alignment workshop',why:'Ready-to-use comms framework',how:'Duplicate for any valueREV workshop series.',template:'Could become template'},
+  {id:'dv4',playbook:'deliver',status:'exists',name:'ValueREV Kickoff Deck (Chainguard)',link:'https://docs.google.com/presentation/d/17Ye8W0IrGbcaE_OodlUCC03zCMTOk2928d_uLzr1hxw/edit',type:'Deck',programs:['valueREV'],client:'Chainguard',what:'ValueREV kickoff deck',why:'Live example of a valueREV kickoff',how:'Reference / duplicate.',template:''},
+
+  // ── HOW WE DELIVER — leaderREV ──
+  {id:'dl1',playbook:'deliver',status:'exists',name:'leaderREV Master Tracker',link:'https://docs.google.com/spreadsheets/d/1hPNXrlLsRAMX6-wNLq_lUUErpIpaZAAsNAAYWimDzWw/edit',type:'Template',programs:['leaderREV'],client:'revlogic',what:'Master tracker for leaderREV engagements',why:'Single pane of glass for leaderREV progress',how:'Use for all leaderREV engagements.',template:'Already a template'},
+  {id:'dl2',playbook:'deliver',status:'exists',name:"3R's Training (Malta EDB)",link:'https://docs.google.com/presentation/d/18i4DzHRYNIPmxWyU2mzOn3zUJTmB966_J0yqPPxHVvw/edit',type:'Deck',programs:['leaderREV'],client:'revlogic',what:'Leadership training deck from Malta 2026',why:'Most recent 3Rs delivery example',how:'Reference / rebrand.',template:''},
+  {id:'dl3',playbook:'deliver',status:'exists',name:'Dataiku 3Rs',link:'https://docs.google.com/presentation/d/1QsPwzYq8ha3NYiOysuo6DJ8I50UU9aiFtLq_1loAfcU/edit',type:'Deck',programs:['leaderREV'],client:'Dataiku',what:'3Rs training deck for Dataiku',why:'Clean example of 3Rs delivery',how:'Reference / rebrand.',template:''},
+  {id:'dl4',playbook:'deliver',status:'exists',name:'Talkdesk 3Rs — Recruitment',link:'https://docs.google.com/presentation/d/1ylzw0G2Nt9VD4kZnXAIqpng1WoCL6S0oDp4IRqvK258/edit',type:'Deck',programs:['leaderREV'],client:'Talkdesk',what:'3Rs recruitment training deck',why:'Good example of recruitment-focused 3Rs',how:'Reference / rebrand.',template:''},
+  {id:'dl5',playbook:'deliver',status:'exists',name:'EQ for Modern Sales Leadership',link:'https://docs.google.com/presentation/d/179q0FSSjtqUbMs4HbVZ0Sprc_ItoruWzU1njMF7N4og/edit',type:'Deck',programs:['leaderREV'],client:'revlogic',what:'Emotional Intelligence for Modern Sales Leadership training deck',why:'Unique content adding EQ dimension to leadership enablement',how:'Reference / adapt.',template:''},
+  {id:'dl6',playbook:'deliver',status:'needs',name:'Leadership Foundations',link:'https://docs.google.com/presentation/d/10k8-PYxPs70bmQMhWKdCDuA7hr9uXGVrIjYRC9w6jOU/edit',type:'Deck',programs:['leaderREV'],client:'Brooke',what:'WIP leader session on fundamentals — Leadership Foundations & Coaching Fundamentals',why:'Work in progress — will become core leaderREV content',how:'Reference only — in progress.',template:''},
+
+  // ── HOW WE DELIVER — partnerREV ──
+  {id:'dpr1',playbook:'deliver',status:'exists',name:'Partner Kickoff Deck (HiveMQ)',link:'https://docs.google.com/presentation/d/1pcVBsbFMnEaOgJfvrZxuN7vmUo8YJwY8ZOvfiA8RBdo/edit',type:'Deck/Example',programs:['partnerREV'],client:'Josh',what:'Example of a Partner Kickoff Deck from live use',why:'Clear outcomes branding — needs revision given HiveMQ learnings',how:'Use for launch of partnerREV to align customers and map out process.',template:'Could become template'},
+  {id:'dpr2',playbook:'deliver',status:'exists',name:'Partnership Plan/Tracker',link:'https://docs.google.com/spreadsheets/d/1Z71kcNanKbRxl96NVMR9BLomosG3TNNTTJKGodhmuCo/edit',type:'Tracker/Template',programs:['partnerREV'],client:'Tiff',what:'Plan of assets comprising partnerREV with great visibility/reporting',why:'Solid overview of assets needed and progress tracking',how:'Templatize for future partnerREVs.',template:'Could become template'},
+  {id:'dpr3',playbook:'deliver',status:'exists',name:'Interview Library (HiveMQ)',link:'https://docs.google.com/spreadsheets/d/1JR0yRkuKzaVju57bJOrck4iUVwCMqy5oHmaJIapMByM/edit',type:'Process/Framework/Example',programs:['partnerREV'],client:'Josh',what:'How to organize/summarize data from internal/external interviews for partnerREV',why:'Strong signal extraction — links to interviews and provides insights in one place',how:'Use AI prompts to generate outcomes from transcripts; synthesize to create partnerREV Framework.',template:'Could become template'},
+  {id:'dpr4',playbook:'deliver',status:'exists',name:'Partner Internal Interview Doc',link:'https://docs.google.com/document/d/12GzRR0iPId2up1o1DrXP_LHJDHzpaYGGUb2GTUjfbJs/edit',type:'Doc/Template',programs:['partnerREV'],client:'Josh',what:'Questions to ask internal team for partnerREV',why:'Clear conversational flow — provides data needed to build partnerREV framework',how:'Use AI prompts to generate outcomes from transcripts; synthesize to create partner framework.',template:'Already a template'},
+  {id:'dpr5',playbook:'deliver',status:'exists',name:'Partner External Interview Doc',link:'https://docs.google.com/document/d/12r30J4W050z3a-tT36fPWHsTllnXg275U8gFear6uO8/edit',type:'Doc/Template',programs:['partnerREV'],client:'Josh',what:'Questions to ask external partners for partnerREV',why:'Clear conversational flow — provides data needed to build partnerREV framework',how:'Use AI prompts to generate outcomes from transcripts; synthesize to create partner framework.',template:'Already a template'},
+  {id:'dpr6',playbook:'deliver',status:'exists',name:'Partner Maturity Model (HiveMQ)',link:'https://docs.google.com/presentation/d/1p4vCztBDkKT-glQB61t5zl6BcAd1xT-H/edit',type:'Deck/Example',programs:['partnerREV'],client:'Josh',what:'Example of the lifecycle of a partnership model — all phases from engagement to product growth',why:'Comprehensive roadmap for building partnerships from the ground up',how:'Use to provide a roadmap for building a partnership plan.',template:'Could become template'},
+  {id:'dpr7',playbook:'deliver',status:'exists',name:'Partner FMD (HiveMQ)',link:'https://docs.google.com/presentation/d/1_8TybUuCQk31ddVjuKd8AhkIPP5Gwblh/edit',type:'Deck/Example',programs:['partnerREV'],client:'Josh',what:'FMD to equip Partner Team to engage partners',why:'Built with direct input from live partner team',how:'Partner managers use to provide compelling case for WHY partner with your company.',template:'Could become template'},
+  {id:'dpr8',playbook:'deliver',status:'exists',name:'Interlock Training Deck (HiveMQ)',link:'https://docs.google.com/presentation/d/1smK_l6oUPsriHOhCw1wAkMrjQzRQm1Px/edit',type:'Deck/Example',programs:['partnerREV'],client:'Josh',what:'How Partner and Sales Interlock — largely hands-on training',why:'Best practices-based, hands-on training format',how:'Use to run an interlock training with Partner and Sales Team.',template:'Could become template'},
+  {id:'dpr9',playbook:'deliver',status:'exists',name:'Partner Acceleration Sprint',link:'https://docs.google.com/presentation/d/1DpmePYBGWqXoDm6EDtcMRFjjSP2-ltUt/edit',type:'Deck/Example',programs:['partnerREV'],client:'Josh',what:'2-part training on Ideal Partner Profile and Building Partner Pipeline/Engagement',why:'Blend of instruction and hands-on learning geared at internal partner/channel teams',how:'Use to upskill partner teams to identify, source and engage the right partners.',template:'Could become template'},
+  {id:'dpr10',playbook:'deliver',status:'exists',name:'Ideal Partner Profile',link:'https://docs.google.com/document/d/1Ft-kZtPBZh1aOTtOT3iI3BGiOkALs0Xb/edit',type:'Doc/Example',programs:['partnerREV'],client:'Josh',what:'How to validate an Ideal Partner — simple accessible doc for pre-work',why:'Simple accessible format to validate partner fit',how:'Partner managers use to filter and qualify inbound/outbound partner opportunities.',template:''},
+
+  {id:'dpr5b',playbook:'deliver',status:'exists',name:'Kickoff Call Recording (partnerREV)',link:'https://drive.google.com/file/d/1VZRkHCEEmGJE8PYD7Avzs6ZPkzbMg_M7/view',type:'Recording/Example',programs:['partnerREV'],client:'Josh',what:'Demo of running a successful partnerREV kickoff meeting',why:'Engaging call — built consensus and collaboration to kick off the project',how:'Training for anyone looking to run partnerREV.',template:'Reference only'},
+  {id:'dpr6b',playbook:'deliver',status:'exists',name:'PEP Training Recording',link:'https://drive.google.com/file/d/1j-_0B8OKjJxtmmSss7Vd88Mxi_RCjveG/view',type:'Recording/Example',programs:['partnerREV'],client:'Josh',what:'Walk through of the training and talk track',why:'Concise example of how to run the training',how:'Can be used for e-learning as well as training for how to run the interlock session.',template:'Reference only'},
+  {id:'dpr7b',playbook:'deliver',status:'exists',name:'Partner FMD Recording (HiveMQ)',link:'https://drive.google.com/file/d/1TLJrozjHbVkSHhKSDjdQSMLlkHwqztXg/view',type:'Recording/Example',programs:['partnerREV'],client:'Josh',what:'How to use the HiveMQ FMD — real example of FMD in action',why:'Provides real example of FMD use case and framing',how:'Use to frame FMD in training and as an asset for onboarding/training.',template:'Reference only'},
+  {id:'dpr8b',playbook:'deliver',status:'exists',name:'Interlock 101 Recordings',link:'https://drive.google.com/drive/folders/1SpBNbKX_tuYV6lkzHIavHxw_I2-LBwM7',type:'Recording/Example',programs:['partnerREV'],client:'Josh',what:'Walk through of the interlock training and talk track',why:'Concise example of how to run the interlock training',how:'Can be used for e-learning or training for how to run the interlock session.',template:'Reference only'},
+  {id:'dpr9b',playbook:'deliver',status:'exists',name:'Partner Acceleration Recording',link:'https://drive.google.com/drive/folders/1noYsH2zCsSAvTSADITGIiN9bDEDsgNOn',type:'Recording/Example',programs:['partnerREV'],client:'Josh',what:'Recording providing talk track and framing for the 2-part training for partner/channel managers',why:'Concise example of how to run the partner acceleration sprint',how:'Can be used for e-learning or training for how to run the partner acceleration sprint.',template:'Reference only'},
+    // ── HOW WE DELIVER — growthREV ──
+  {id:'dg10',playbook:'deliver',status:'exists',name:'GrowthREV Discovery Checklist (Metronome)',link:'https://docs.google.com/spreadsheets/d/1KFEu7e3-YtwapFGmQSsvv9JSehfDwREadJr2KsY7A2Y/edit',type:'Tracker/Checklist',programs:['growthREV'],client:'Ashley Weston',what:'Discovery checklist for growthREV engagement',why:'Structured discovery ensures no gaps in growthREV scoping',how:'Use in growthREV kickoff and discovery phase.',template:''},
+  {id:'dg11',playbook:'deliver',status:'exists',name:'Metronome GrowthREV Deck',link:'https://docs.google.com/presentation/d/1CVqu0LgWQ6I4HTmOUBCj1KdLISHMVAPpxlbj8mUDnK4/edit',type:'Deck',programs:['growthREV'],client:'Ashley Weston',what:'Deck to manage ongoing engagement and updates for growthREV project',why:'Useful structure for managing ongoing growthREV communication',how:'Reference / adapt.',template:''},
+  {id:'dg12',playbook:'deliver',status:'exists',name:'Renewal Sales Process + Negotiation Playbook (Benchling)',link:'https://docs.google.com/presentation/d/1cZ2WxAwS2C7Njsjb1Nk9opFH862ZTpe8iJk2i8g6ENU/edit',type:'Deck',programs:['growthREV'],client:'Tiff',what:'Holistic process overview for renewals with resources, ROE, and negotiation playbook',why:'Equips AMs & AEs to negotiate effectively, defend value, manage exec conversations',how:'Use for growthREV renewal training.',template:''},
+  {id:'dg13',playbook:'deliver',status:'exists',name:'AM Bootcamp (Benchling)',link:'https://docs.google.com/presentation/d/1XKmRE7Q5PbnBy9-EH0bjguCiM1u-pzIofARqeNgvboY/edit',type:'Deck',programs:['growthREV'],client:'Tiff',what:'AM Bootcamp materials for Benchling',why:'Strong example of AM-focused bootcamp content',how:'Reference / adapt.',template:''},
+  {id:'dg14',playbook:'deliver',status:'exists',name:'GrowthREV Playbook Outline',link:'https://docs.google.com/document/d/1-4ZliQIqlNkBApg8_5g9Sz-T5RRSsvDvBiPKS6FbCM0/edit',type:'Checklist',programs:['growthREV'],client:'Tiff',what:'Checklist/outline for growthREV playbook build',why:'Good starting structure for a growthREV',how:'Use in planning phase.',template:''},
+  {id:'dg15',playbook:'deliver',status:'exists',name:'Renewals Negotiations Playbook (Benchling)',link:'https://docs.google.com/presentation/d/1h86gl30diQ-W4o1eUavjfYGOoheHCGqIdqAIOHaS2CI/edit',type:'Deck',programs:['growthREV'],client:'Tiff',what:'Playbook for negotiating flat/minor contractions at renewal',why:'Equips AMs to negotiate, defend value, and manage executive conversations',how:'Use for renewal training sessions.',template:''},
+
+  // ── HOW WE DELIVER — roiREV ──
+  {id:'dr1',playbook:'deliver',status:'needs',name:'roiREV Overview',link:'https://docs.google.com/presentation/d/1dYWpj0WeXa5TT0Z4tj5XNB1K-3XUoXNl2OHEvEHzaqc/edit',type:'Deck',programs:['roiREV'],client:'revlogic',what:'Overview of valueREV and roiREV — needs updating for revfactor',why:'Starting point for roiREV positioning',how:'Reference only — update with revfactor before using.',template:'Could become template'},
+  {id:'dr2',playbook:'deliver',status:'needs',name:'ROI Prototype',link:'https://docs.google.com/presentation/d/1i-fejgPUnF1EppQt-TuLDm0lUhB1bMk3/edit',type:'Deck',programs:['roiREV'],client:'Mike Murphy',what:'Outlines the ROI model proposed for Cast.ai — created summer 2025, would be updated with revfactor now',why:'Reference starting point for ROI modeling',how:'Reference only.',template:'Reference only'},
+  {id:'dr3',playbook:'deliver',status:'needs',name:'Cost Benefits Calculator',link:'https://docs.google.com/spreadsheets/d/1qw702BUiARJWjz_ZRP2nlk3mkNyMuYsU/edit',type:'Other',programs:['roiREV'],client:'Mike Murphy',what:'ROI calculator created for Cast — would be different now with revfactor',why:'Reference calculator structure',how:'Reference only — needs updating for revfactor.',template:'Reference only'},
+  {id:'dr4',playbook:'deliver',status:'needs',name:"Day in the Life Workflow",link:'https://docs.google.com/presentation/d/1jrmE-P39MTdeyBxts_oF4RmpVEFHOKjy/edit',type:'Deck',programs:['roiREV'],client:'Mike Murphy',what:'Combines valueREV and persona thinking — CIO persona with value drivers and how to quantify them',why:'Interesting start for a training series for clients doing valueREV + roiREV',how:'Reference only — needs updating with revfactor.',template:'Reference only'},
+
+  // ── HOW WE SHOW UP ──
+  {id:'sh1',playbook:'show',status:'exists',name:'revlogic Brand Guide & Templates',link:'https://docs.google.com/presentation/d/1jBW7CKi19aVdRbqxQc2j1XDM2CnPcokqZiRX2Cvu1z0/edit',type:'Process/Framework',programs:[],client:'marketing/revstudios',what:'Brand voice, messaging, look/feel, slide templates',why:'The source of truth for how revlogic shows up — aligned',how:'Reference before creating any client-facing material.',template:''},
+  {id:'sh2',playbook:'show',status:'exists',name:'Rick SEC Keynote',link:'https://docs.google.com/presentation/d/1-ZZkpYF8Nk2u60VbFUfhVZLN377Co2KwDDJy9C8-euM/edit',type:'Deck',programs:[],client:'Rick',what:'Rick\'s SEC keynote deck',why:'Shows our thought leadership and positioning at the highest level',how:'Use as reference for exec-level positioning.',template:''},
+  {id:'sh2b',playbook:'show',status:'exists',name:'Rick DC Pavilion Keynote',link:'https://docs.google.com/presentation/d/1BwVOaSVNBkVXU9p5kmJOO1JpJI3PaHR5gfzJrhPrFKo/edit',type:'Deck',programs:[],client:'Rick',what:"Rick's way of sharing the RevLogic approach to accelerating revenue",why:'Strong exec-level narrative for RevLogic',how:'Use in executive conversations.',template:''},
+  {id:'sh3',playbook:'show',status:'exists',name:'Customer Testimonials (Parm, Julie, Morgan)',link:'https://drive.google.com/file/d/1o0vw4Zvp9X1vR50o7ir0YoIWD7Aszp0V/view',type:'Recording',programs:[],client:'Various',what:'Three customer testimonial videos',why:'Social proof — real clients speaking to RevLogic value',how:'Use in sales conversations and prospect outreach.',template:''},
+  {id:'sh4',playbook:'show',status:'exists',name:'EBSTA Whitepaper & 2025 H1 Report',link:'https://drive.google.com/file/d/1XJzNiWQ_HVHi1qJpDAzcL_ke3sqC3rT1/view',type:'Other',programs:[],client:'marketing',what:'Research-backed reports on revenue performance',why:'Third-party validation and data to support conversations',how:'Share as thought leadership in prospecting or early-stage conversations.',template:''},
+  {id:'sh5',playbook:'show',status:'exists',name:'2025 Benchmarks Report',link:'https://drive.google.com/file/d/1LsSIqisUXk9CLuwfKnPimP9-N8fHnsV6/view',type:'Other',programs:[],client:'marketing',what:'Benchmark data for 2025',why:'Current data to anchor conversations on industry reality',how:'Use to establish credibility and drive urgency in prospect conversations.',template:''},
+  {id:'sh6',playbook:'show',status:'needs',name:'Industry-Specific Use Cases',link:'',type:'',programs:[],client:'revlogic',what:'Industry-specific use cases for RevLogic solutions',why:'Critical missing asset — essential for mid-market targeting',how:'In progress.',template:''},
+  {id:'sh7',playbook:'show',status:'exists',name:'Solution Overviews',link:'https://drive.google.com/drive/folders/1iAJ1wRJDPFqKe-Zil1c6ixDtYEuCrv6y',type:'Other',programs:[],client:'revlogic',what:'Overview documents for each RevLogic solution',why:'Concise solution-level reference',how:'Use in early conversations or leave-behinds.',template:''},
+  {id:'sh8',playbook:'show',status:'exists',name:'Champify Podcast (Rick)',link:'https://youtube.com/watch?feature=shared&v=7P5PgbvLzAw',type:'Recording',programs:[],client:'Rick',what:'Rick on the Champify podcast discussing RevLogic approach',why:'Great thought leadership audio/video asset',how:'Share in nurture sequences or for new prospect context.',template:''},
+  {id:'sh9',playbook:'show',status:'exists',name:"Rick Kickert's LinkedIn",link:'https://www.linkedin.com/in/rickkickert',type:'Other',programs:[],client:'Rick',what:"Rick's LinkedIn presence and thought leadership content",why:'Brand building and thought leadership in market',how:'Reference/share for brand credibility.',template:''},
+  {id:'sh10',playbook:'show',status:'exists',name:'Simplified Value Framework',link:'https://docs.google.com/presentation/d/1uUzoONJwCfZH-dKG5HH9sGOtDxq6E9vvrsTe3Jad7xk/edit',type:'Process/Framework',programs:[],client:'revlogic',what:'Simplified version of the RevLogic value framework',why:'Accessible entry point to the framework',how:'Use early in sales conversations to show structure of our approach.',template:''},
+  {id:'sh11',playbook:'show',status:'exists',name:'RevLogic Labs',link:'https://docs.google.com/presentation/d/17eb670M0O5Lv6excr3iJCUaW7-CwnBvUQx_uRGFj3i0/edit',type:'Deck',programs:[],client:'revlogic',what:'RevLogic Labs deck',why:'Thought leadership and innovation positioning',how:'Use in conversations about RevLogic Labs.',template:''},
+  {id:'sh12',playbook:'show',status:'exists',name:'RevLogic Labs PR',link:'https://docs.google.com/document/d/1Skp4x0jb3c9w9Rzd_T2XRiWNmDSYIM7zJ_XOhXXorMM/edit',type:'Doc',programs:[],client:'revlogic',what:'PR materials for RevLogic Labs',why:'Official communications around RevLogic Labs launch',how:'Reference for PR and comms.',template:''},
+  {id:'sh13',playbook:'show',status:'exists',name:'RevLogic Growth LinkedIn Post',link:'https://www.linkedin.com/feed/update/urn:li:activity:7417825411708895232/',type:'Other',programs:[],client:'revlogic',what:'LinkedIn post about RevLogic growth',why:'Social proof of momentum',how:'Share/reference in prospect conversations.',template:''},
+  {id:'sh14',playbook:'show',status:'exists',name:'SKO Guide',link:'https://drive.google.com/file/d/1CeGYVBce24d6_KT-rY_4b3bGZlhCVncT/view',type:'Other',programs:[],client:'marketing/revstudios',what:'Guide to planning and running an SKO',why:'Useful reference for clients and internal planning',how:'Share with clients planning SKOs.',template:''},
+  {id:'sh15',playbook:'show',status:'exists',name:'Enablement is Not Training (LinkedIn)',link:'https://www.linkedin.com/posts/domestique-gtm-operations_enablement-is-not-training-how-revops-teams-activity-7431744665571471360-hC3b',type:'Other',programs:[],client:'Domestique (partner)',what:'LinkedIn post differentiating enablement from training',why:'Strong thought leadership positioning for RevLogic',how:'Share in early-stage prospect conversations to establish POV.',template:''},
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let state = {
+  playbook: 'all',
+  program: null,
+  search: '',
+  filters: {exists:true, needs:true, wish:false, template:false},
+  mode: 'browse'
+};
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function init(){
+  updateCounts();
+  applyFilters();
+}
+
+function updateCounts(){
+  const pb = {all:0,sell:0,build:0,deliver:0,show:0};
+  const prog = {};
+  ASSETS.forEach(a=>{
+    if(a.status==='exists'||a.status==='needs'){
+      pb.all++;pb[a.playbook]++;
+      (a.programs||[]).forEach(p=>{prog[p]=(prog[p]||0)+1});
+    }
+  });
+  Object.keys(pb).forEach(k=>{const el=document.getElementById('ct-'+k);if(el)el.textContent=pb[k]||''});
+  ['dealREV','rampREV','valueREV','leaderREV','pipelineREV','partnerREV','growthREV','roiREV','REVstudios'].forEach(p=>{
+    const el=document.getElementById('ct-'+p);if(el)el.textContent=prog[p]||'';
+  });
+}
+
+// ─────────────────────────────────────────────
+// FILTERS
+// ─────────────────────────────────────────────
+function setPlaybook(pb,el){
+  state.playbook=pb; state.program=null;
+  document.querySelectorAll('.sb-section:first-child .sb-item').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.sb-section:last-child .sb-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const titles={all:'All content',sell:'How we sell & how we win',build:'What we build',deliver:'How we deliver',show:'Who we are & how we show up'};
+  const subs={all:'Your full RevLogic asset library',sell:'Sales process, FMD, partner tools, and commercial assets',build:'Deliverable examples across all REV programs',deliver:'Program-specific delivery assets by REV type',show:'Brand, thought leadership, and proof points'};
+  document.getElementById('browse-title').textContent=titles[pb];
+  document.getElementById('browse-sub').textContent=subs[pb];
+  applyFilters();
+}
+
+function setProgram(prog,el){
+  state.program=prog; state.playbook='all';
+  document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('browse-title').textContent=prog;
+  document.getElementById('browse-sub').textContent='Assets tagged to the '+prog+' program';
+  applyFilters();
+}
+
+function toggleFilter(f,el){
+  if(f==='template'){
+    state.filters.template=!state.filters.template;
+    el.classList.toggle('on',state.filters.template);
+  } else {
+    state.filters[f]=!state.filters[f];
+    el.classList.toggle('on',state.filters[f]);
+  }
+  applyFilters();
+}
+
+function applyFilters(){
+  const q=document.getElementById('search-input').value.toLowerCase();
+  state.search=q;
+  let results=ASSETS.filter(a=>{
+    if(state.playbook!=='all'&&a.playbook!==state.playbook)return false;
+    if(state.program&&!a.programs.includes(state.program))return false;
+    if(!state.filters.exists&&a.status==='exists')return false;
+    if(!state.filters.needs&&a.status==='needs')return false;
+    if(!state.filters.wish&&a.status==='wish')return false;
+    if(state.filters.template&&!a.template.toLowerCase().includes('template'))return false;
+    if(q){
+      const hay=[a.name,a.what,a.why,a.how,a.client,...(a.programs||[])].join(' ').toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  });
+  document.getElementById('results-count').textContent=results.length+' asset'+(results.length===1?'':'s')+' found';
+  renderAssets(results);
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function statusDot(s){
+  if(s==='exists')return'status-exists';
+  if(s==='needs')return'status-needs';
+  return'status-wish';
+}
+
+function renderAssets(assets){
+  const grid=document.getElementById('assets-grid');
+  if(!assets.length){grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">No assets match your filters</div>';return;}
+  grid.innerHTML=assets.map(a=>{
+    const hasLink=a.link&&a.link.startsWith('http');
+    const progTags=(a.programs||[]).map(p=>`<span class="tag tag-program">${p}</span>`).join('');
+    const typeTags=a.type?`<span class="tag tag-type">${a.type}</span>`:'';
+    const tplTag=a.template&&a.template.toLowerCase().includes('template')?`<span class="tag tag-template">${a.template}</span>`:'';
+    const warnTag=a.warn?`<span class="tag tag-warn">⚠ See usage note</span>`:'';
+    const howHtml=a.how?`<div class="asset-how">${a.how}</div>`:'';
+    const linkHtml=hasLink
+      ?`<a class="open-link" href="${a.link}" target="_blank" rel="noopener"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 2M10 2H5M10 2V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Open</a>
+        <button class="copy-link" onclick="copyLink('${a.link}',event)"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.2"/></svg>Copy</button>`
+      :`<span class="no-link">No link yet</span>`;
+    return`<div class="asset-row${hasLink?' has-link':''}">
+      <div class="asset-status ${statusDot(a.status)}"></div>
+      <div class="asset-main">
+        <div class="asset-name">${a.name}</div>
+        ${a.what?`<div class="asset-desc">${a.what}</div>`:''}
+        ${a.why?`<div class="asset-desc" style="color:var(--text3);font-style:italic">${a.why}</div>`:''}
+        ${howHtml}
+        <div class="asset-tags">${progTags}${typeTags}${tplTag}${warnTag}</div>
+      </div>
+      <div class="asset-right">${linkHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function copyLink(url,e){
+  e.preventDefault();e.stopPropagation();
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=e.currentTarget;const orig=btn.innerHTML;
+    btn.textContent='Copied!';btn.style.color='var(--green)';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';},2000);
+  });
+}
+
+// ─────────────────────────────────────────────
+// MODE SWITCHING
+// ─────────────────────────────────────────────
+function setMode(m){
+  state.mode=m;
+  document.getElementById('browse-mode').style.display=m==='browse'?'block':'none';
+  document.getElementById('guide-mode').style.display=m==='guide'?'flex':'none';
+  document.getElementById('btn-browse').classList.toggle('active',m==='browse');
+  document.getElementById('btn-guide').classList.toggle('active',m==='guide');
+}
+
+// ─────────────────────────────────────────────
+// AI GUIDE
+// ─────────────────────────────────────────────
+function fillExample(el){
+  document.getElementById('guide-input').value=el.textContent;
+  document.getElementById('guide-input').focus();
+}
+
+async function askGuide(){
+  const q=document.getElementById('guide-input').value.trim();
+  if(!q)return;
+  const btn=document.getElementById('ask-btn');
+  btn.disabled=true;btn.classList.add('loading');
+  btn.querySelector('.btn-label').textContent='Finding…';
+
+  const resultsEl=document.getElementById('guide-results');
+  resultsEl.innerHTML=`<div class="ai-thinking"><div class="dot1"></div><div class="dot2"></div><div class="dot3"></div><span>Reading playbooks…</span></div>`;
+
+  // Build asset summary for the prompt
+  const assetSummary=ASSETS.filter(a=>a.status!=='wish').map(a=>
+    `[${a.id}] "${a.name}" | Playbook:${a.playbook} | Programs:${(a.programs||[]).join(',')||'general'} | Status:${a.status} | Type:${a.type} | Client:${a.client} | What:${a.what} | Why strong:${a.why} | How to use:${a.how}${a.template?' | Template:'+a.template:''}${a.link?' | HasLink:yes':' | HasLink:no'}`
+  ).join('\n');
+
+  const systemPrompt=`You are the RevLogic enablement AI. You have deep knowledge of RevLogic's four playbooks:
+1. How We Sell & Win — sales process, FMD, partner tools, commercial assets
+2. What We Build — deliverable examples across all REV programs (dealREV, rampREV, valueREV, leaderREV, pipelineREV, partnerREV, REVstudios, growthREV, roiREV)
+3. How We Deliver — program-specific delivery assets by REV type
+4. How We Show Up — brand, thought leadership, proof points, testimonials
+
+RevLogic's REV programs: dealREV (sales process enablement), rampREV (onboarding/bootcamp), valueREV (value framework & messaging), leaderREV (leadership development/3Rs), pipelineREV (pipeline generation/PG motions), partnerREV (partner ecosystem enablement), growthREV (renewal/expansion), roiREV (ROI/business value), REVstudios (video/content production).
+
+Here is the full asset library:
+${assetSummary}
+
+When the user asks a question, respond with:
+1. A brief 2-3 sentence strategic answer to their situation
+2. The 3-5 most relevant asset IDs in order of priority (only assets with status "exists" or "needs" — never "wish")
+3. For each asset: WHY it fits their specific situation and HOW to use it right now
+
+Return ONLY valid JSON, no markdown, no preamble:
+{
+  "answer": "strategic guidance for their situation",
+  "assets": [
+    {"id":"b2","why":"why this fits their situation specifically","action":"concrete next step to use it right now"},
+    ...
+  ]
+}`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:systemPrompt,
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data=await res.json();
+    const text=(data.content||[]).map(b=>b.text||'').join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    renderGuideResults(parsed,q);
+  }catch(err){
+    resultsEl.innerHTML=`<div style="color:var(--red);font-size:13px;padding:24px">Something went wrong. Make sure you're connected to the internet and try again.</div>`;
+  }
+
+  btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btn-label').textContent='Find assets';
+}
+
+function renderGuideResults(data,q){
+  const resultsEl=document.getElementById('guide-results');
+  const matched=data.assets.map(rec=>{
+    const asset=ASSETS.find(a=>a.id===rec.id);
+    return asset?{...asset,...rec}:null;
+  }).filter(Boolean);
+
+  const cards=matched.map(a=>{
+    const hasLink=a.link&&a.link.startsWith('http');
+    const progTags=(a.programs||[]).map(p=>`<span class="tag tag-program">${p}</span>`).join('');
+    const linkHtml=hasLink
+      ?`<a class="open-link" href="${a.link}" target="_blank" rel="noopener"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 2M10 2H5M10 2V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Open</a>`
+      :`<span class="no-link" style="font-size:11px;color:var(--text3)">No link yet</span>`;
+    return`<div class="rec-card">
+      <div class="rec-card-header">
+        <div class="rec-card-title">${a.name}</div>
+        <div style="display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">${progTags}${linkHtml}</div>
+      </div>
+      <div class="rec-why">${a.why}</div>
+      <div class="rec-how"><strong>Right now:</strong> ${a.action}</div>
+      ${a.how?`<div class="rec-how" style="border-left-color:var(--amber-dim);margin-top:4px"><strong>How to use:</strong> ${a.how}</div>`:''}
+    </div>`;
+  }).join('');
+
+  resultsEl.innerHTML=`
+    <div class="ai-response">
+      <div class="ai-answer">${data.answer}</div>
+      ${matched.length?`<div class="rec-section-title">Recommended assets for your situation</div><div class="rec-cards">${cards}</div>`:'<p style="color:var(--text3);font-size:13px">No specific assets found — try rephrasing your situation.</p>'}
+    </div>`;
+}
+
+init();
+</script>
+</body>
+</html>
